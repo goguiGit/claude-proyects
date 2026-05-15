@@ -50,10 +50,6 @@ export default function Hero() {
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
         <div>
-          <div className="inline-flex items-center gap-2 bg-accent-blue/10 border border-accent-blue/30 rounded-full px-4 py-1.5 text-xs text-accent-blue font-semibold mb-6">
-            {hero.badge}
-          </div>
-
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight text-slate-100 mb-6">
             {hero.title[0]}{' '}
             <span className="gradient-text">{hero.title[1]}</span>

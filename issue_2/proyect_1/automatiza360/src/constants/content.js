@@ -10,7 +10,7 @@ export const CONTENT = {
     cta: 'Reserva una llamada',
   },
   hero: {
-    badge: '🤖 IA + Automatización para negocios',
+    badge: 'IA + Automatización para negocios',
     title: ['Tu negocio vendiendo', 'mientras tú duermes'],
     titleGradient: 'mientras tú duermes',
     subtitle:
