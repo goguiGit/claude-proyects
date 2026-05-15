@@ -20,3 +20,18 @@ test('Navbar renders logo and CTA', () => {
   expect(screen.getByText(/Automatiza/)).toBeInTheDocument()
   expect(screen.getByText(/Reserva una llamada/)).toBeInTheDocument()
 })
+
+import Hero from '../components/Hero'
+
+test('Hero renders headline and CTA buttons', () => {
+  render(<Hero />)
+  expect(screen.getByText(/Tu negocio vendiendo/)).toBeInTheDocument()
+  expect(screen.getByText(/Reserva tu llamada gratis/)).toBeInTheDocument()
+  expect(screen.getByText(/Ver cómo funciona/)).toBeInTheDocument()
+})
+
+test('HeroVisual renders Antes/Después labels', () => {
+  render(<Hero />)
+  expect(screen.getAllByText(/Antes/).length).toBeGreaterThan(0)
+  expect(screen.getAllByText(/Después/).length).toBeGreaterThan(0)
+})
