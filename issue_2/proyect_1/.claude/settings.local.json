@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(bash \"C:/Users/rodrigo.valdez/.claude/plugins/cache/claude-plugins-official/superpowers/5.1.0/skills/brainstorming/scripts/start-server.sh\" --project-dir \"c:/_Go/Claude Code Crea Aplicaciones con IA/issue_2/proyect_1\")",
+      "Skill(superpowers:writing-plans)",
+      "Skill(superpowers:writing-plans:*)",
+      "Skill(superpowers:subagent-driven-development)",
+      "Skill(superpowers:subagent-driven-development:*)",
+      "Bash(npm install *)",
+      "Bash(npx tailwindcss *)",
+      "Bash(npx --yes tailwindcss init -p)",
+      "Bash(node -e \"const pkg = require\\('./node_modules/tailwindcss/package.json'\\); console.log\\(pkg.version\\)\")",
+      "Bash(node -e \"const p = require\\('./package.json'\\); console.log\\('scripts:', JSON.stringify\\(p.scripts\\)\\); console.log\\('devDeps tailwind:', p.devDependencies.tailwindcss\\); console.log\\('devDeps vitest:', p.devDependencies.vitest\\); console.log\\('devDeps jest-dom:', p.devDependencies['@testing-library/jest-dom']\\)\")",
+      "Bash(findstr tailwindcss *)",
+      "Bash(npm run *)",
+      "Bash(npm test *)",
+      "Bash(npx vitest *)"
+    ]
+  }
+}

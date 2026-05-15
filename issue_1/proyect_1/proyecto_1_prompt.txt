@@ -1,0 +1,8 @@
+Crea un archivo app.py con una interfaz Streamlit para la calculadora
+de src/calculator.py. Debe tener:
+- Dos campos numéricos para introducir valores
+- Botones para cada operación (sumar, restar, multiplicar, dividir)
+- Mostrar el resultado en grande
+- Manejar el error de división por cero con un mensaje amigable
+Después, crea un entorno virtual, instala las dependencias que se encuentran en @requirements.txt en el entorno virtual, 
+ejecuta los tests para asegurarte de que todo esta bien y ejecuta la aplicación web con streamlit

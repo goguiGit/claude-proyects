@@ -1,0 +1,95 @@
+<h2>¿Qué visual acompaña al Hero?</h2>
+<p class="subtitle">El elemento visual del Hero es clave para la primera impresión. ¿Cuál de estos enfoques prefieres?</p>
+
+<div class="cards">
+
+  <div class="card" data-choice="flow" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: #0a0f1e; height:180px; padding:16px; display:flex; align-items:center; justify-content:center;">
+      <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:center;">
+        <div style="background:#0d1b2a; border:1px solid #0ea5e9; border-radius:8px; padding:8px 12px; color:#0ea5e9; font-size:11px; font-weight:600;">📋 Lead entra</div>
+        <div style="color:#06b6d4; font-size:18px;">→</div>
+        <div style="background:#0d1b2a; border:1px solid #06b6d4; border-radius:8px; padding:8px 12px; color:#06b6d4; font-size:11px; font-weight:600;">🤖 IA clasifica</div>
+        <div style="color:#06b6d4; font-size:18px;">→</div>
+        <div style="background:#0d1b2a; border:1px solid #0ea5e9; border-radius:8px; padding:8px 12px; color:#0ea5e9; font-size:11px; font-weight:600;">📱 WhatsApp</div>
+        <div style="color:#06b6d4; font-size:18px;">→</div>
+        <div style="background:linear-gradient(90deg,#0ea5e9,#06b6d4); border-radius:8px; padding:8px 12px; color:white; font-size:11px; font-weight:700;">✅ Venta</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Flujo de automatización</h3>
+      <p>Nodos conectados mostrando el proceso: Lead → IA → CRM → WhatsApp → Venta. Explica el producto en una imagen. Muy SaaS y técnico.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="dashboard" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: #0a0f1e; height:180px; padding:14px; display:flex; flex-direction:column; gap:8px;">
+      <div style="background:#0d1b2a; border:1px solid rgba(14,165,233,0.2); border-radius:8px; padding:8px 12px; display:flex; justify-content:space-between; align-items:center;">
+        <span style="color:#94a3b8; font-size:10px;">Leads este mes</span>
+        <span style="color:#0ea5e9; font-size:16px; font-weight:700;">+247</span>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <div style="background:#0d1b2a; border:1px solid rgba(14,165,233,0.2); border-radius:8px; padding:8px; flex:1; text-align:center;">
+          <div style="color:#06b6d4; font-size:14px; font-weight:700;">98%</div>
+          <div style="color:#64748b; font-size:9px;">Tasa respuesta</div>
+        </div>
+        <div style="background:#0d1b2a; border:1px solid rgba(14,165,233,0.2); border-radius:8px; padding:8px; flex:1; text-align:center;">
+          <div style="color:#0ea5e9; font-size:14px; font-weight:700;">3.2x</div>
+          <div style="color:#64748b; font-size:9px;">ROI medio</div>
+        </div>
+        <div style="background:#0d1b2a; border:1px solid rgba(14,165,233,0.2); border-radius:8px; padding:8px; flex:1; text-align:center;">
+          <div style="color:#06b6d4; font-size:14px; font-weight:700;">12h</div>
+          <div style="color:#64748b; font-size:9px;">Ahorradas/día</div>
+        </div>
+      </div>
+      <div style="background:#0d1b2a; border:1px solid rgba(14,165,233,0.15); border-radius:8px; padding:8px; display:flex; gap:4px; align-items:flex-end; height:50px;">
+        <div style="flex:1; background:linear-gradient(to top,#0ea5e9,transparent); border-radius:2px; height:30%"></div>
+        <div style="flex:1; background:linear-gradient(to top,#0ea5e9,transparent); border-radius:2px; height:55%"></div>
+        <div style="flex:1; background:linear-gradient(to top,#0ea5e9,transparent); border-radius:2px; height:40%"></div>
+        <div style="flex:1; background:linear-gradient(to top,#0ea5e9,transparent); border-radius:2px; height:80%"></div>
+        <div style="flex:1; background:linear-gradient(to top,#06b6d4,transparent); border-radius:2px; height:95%"></div>
+        <div style="flex:1; background:linear-gradient(to top,#0ea5e9,transparent); border-radius:2px; height:70%"></div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Dashboard de resultados</h3>
+      <p>Panel estilo app mostrando métricas: leads, ahorro de tiempo, ROI, conversiones. Transmite resultados reales y datos concretos.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="mockup-split" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: #0a0f1e; height:180px; padding:14px; display:flex; gap:10px; align-items:stretch;">
+      <div style="flex:1; display:flex; flex-direction:column; gap:6px; justify-content:center;">
+        <div style="background:#0d1b2a; border:1px solid rgba(14,165,233,0.3); border-radius:8px; padding:8px;">
+          <div style="color:#64748b; font-size:9px; margin-bottom:4px;">📧 Email recibido</div>
+          <div style="height:4px; background:rgba(14,165,233,0.2); border-radius:2px;"></div>
+          <div style="height:4px; background:rgba(14,165,233,0.1); border-radius:2px; margin-top:3px; width:70%;"></div>
+        </div>
+        <div style="color:#0ea5e9; font-size:10px; text-align:center;">↓ Automatiza360</div>
+        <div style="background:linear-gradient(135deg,rgba(14,165,233,0.15),rgba(6,182,212,0.1)); border:1px solid rgba(14,165,233,0.4); border-radius:8px; padding:8px;">
+          <div style="color:#0ea5e9; font-size:9px; margin-bottom:4px;">✅ CRM actualizado</div>
+          <div style="color:#06b6d4; font-size:9px;">📱 WhatsApp enviado</div>
+          <div style="color:#0ea5e9; font-size:9px; margin-top:2px;">📅 Reunión agendada</div>
+        </div>
+      </div>
+      <div style="flex:1; display:flex; flex-direction:column; gap:4px; justify-content:center;">
+        <div style="background:#0d1b2a; border:1px solid rgba(6,182,212,0.2); border-radius:6px; padding:6px 8px; display:flex; justify-content:space-between;">
+          <span style="color:#64748b; font-size:9px;">Leads hoy</span>
+          <span style="color:#06b6d4; font-size:11px; font-weight:700;">+18</span>
+        </div>
+        <div style="background:#0d1b2a; border:1px solid rgba(6,182,212,0.2); border-radius:6px; padding:6px 8px; display:flex; justify-content:space-between;">
+          <span style="color:#64748b; font-size:9px;">Tareas auto</span>
+          <span style="color:#0ea5e9; font-size:11px; font-weight:700;">94%</span>
+        </div>
+        <div style="background:#0d1b2a; border:1px solid rgba(6,182,212,0.2); border-radius:6px; padding:6px 8px; display:flex; justify-content:space-between;">
+          <span style="color:#64748b; font-size:9px;">Tiempo ahorrado</span>
+          <span style="color:#06b6d4; font-size:11px; font-weight:700;">12h</span>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Antes / Después + Métricas</h3>
+      <p>Split mostrando el proceso manual vs automatizado, combinado con KPIs clave. Muy orientado a conversión: el visitante entiende el valor al instante.</p>
+    </div>
+  </div>
+
+</div>

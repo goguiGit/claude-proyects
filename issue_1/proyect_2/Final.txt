@@ -1,0 +1,12 @@
+Cuando termines, tu directorio de proyecto debería contener al menos estos archivos:
+
+todo-api/
+├── requirements.txt
+├── src/
+│   ├── main.py
+│   ├── database.py
+│   └── models.py
+├── tests/
+│   └── test_todos.py
+└── app_ui.py
+

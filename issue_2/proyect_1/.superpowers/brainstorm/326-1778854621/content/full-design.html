@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Automatiza360 — Diseño de Landing</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif; background: #060b14; color: #e2e8f0; }
+
+  .page-header { background: #060b14; border-bottom: 1px solid rgba(14,165,233,0.15); padding: 12px 24px; display:flex; align-items:center; justify-content:space-between; }
+  .page-title { color: #0ea5e9; font-size: 13px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+  .page-subtitle { color: #475569; font-size: 11px; }
+
+  .section-block { border: 1px solid rgba(14,165,233,0.12); border-radius: 12px; margin: 16px; overflow: hidden; }
+  .section-label { background: rgba(14,165,233,0.08); border-bottom: 1px solid rgba(14,165,233,0.12); padding: 8px 16px; display:flex; align-items:center; gap:8px; }
+  .section-num { background: linear-gradient(90deg, #0ea5e9, #06b6d4); color: white; width: 20px; height: 20px; border-radius: 50%; display:inline-flex; align-items:center; justify-content:center; font-size: 10px; font-weight: 700; flex-shrink:0; }
+  .section-name { color: #94a3b8; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+  .section-body { padding: 16px; }
+
+  /* NAVBAR */
+  .navbar { display:flex; align-items:center; justify-content:space-between; padding: 0 16px; }
+  .logo { color: #0ea5e9; font-size: 18px; font-weight: 800; letter-spacing: -0.5px; }
+  .nav-links { display:flex; gap: 20px; }
+  .nav-link { color: #64748b; font-size: 12px; }
+  .nav-cta { background: linear-gradient(90deg, #0ea5e9, #06b6d4); color: white; padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+
+  /* HERO */
+  .hero-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: center; }
+  .hero-badge { display:inline-flex; align-items:center; gap:6px; background: rgba(14,165,233,0.1); border: 1px solid rgba(14,165,233,0.3); border-radius: 20px; padding: 4px 12px; font-size: 11px; color: #0ea5e9; margin-bottom: 12px; }
+  .hero-title { font-size: 24px; font-weight: 800; line-height: 1.2; margin-bottom: 10px; }
+  .hero-title span { background: linear-gradient(90deg, #0ea5e9, #06b6d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .hero-sub { color: #94a3b8; font-size: 13px; line-height: 1.6; margin-bottom: 16px; }
+  .hero-btns { display:flex; gap: 10px; flex-wrap:wrap; }
+  .btn-primary { background: linear-gradient(90deg, #0ea5e9, #06b6d4); color: white; padding: 10px 18px; border-radius: 8px; font-size: 12px; font-weight: 700; }
+  .btn-secondary { border: 1px solid rgba(14,165,233,0.4); color: #0ea5e9; padding: 10px 18px; border-radius: 8px; font-size: 12px; font-weight: 600; }
+
+  /* HERO VISUAL */
+  .hero-visual { background: #0a0f1e; border: 1px solid rgba(14,165,233,0.2); border-radius: 10px; padding: 14px; }
+  .vis-split { display:grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .vis-side { background: #0d1b2a; border-radius: 8px; padding: 10px; }
+  .vis-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+  .vis-label.before { color: #ef4444; }
+  .vis-label.after { color: #22c55e; }
+  .vis-item { font-size: 9px; color: #64748b; padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.04); display:flex; align-items:center; gap:4px; }
+  .vis-item.bad::before { content:"✗"; color:#ef4444; }
+  .vis-item.good::before { content:"✓"; color:#22c55e; }
+  .vis-metrics { display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-top: 10px; }
+  .vis-metric { background: #0d1b2a; border-radius: 6px; padding: 8px; text-align:center; }
+  .vis-metric-val { color: #0ea5e9; font-size: 14px; font-weight: 800; }
+  .vis-metric-label { color: #475569; font-size: 8px; margin-top: 2px; }
+
+  /* CREDIBILITY */
+  .cred-grid { display:grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .cred-item { background: #0d1b2a; border: 1px solid rgba(14,165,233,0.15); border-radius: 8px; padding: 14px; text-align: center; }
+  .cred-num { color: #0ea5e9; font-size: 22px; font-weight: 800; }
+  .cred-label { color: #64748b; font-size: 10px; margin-top: 4px; }
+
+  /* PROBLEMS */
+  .problems-grid { display:grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .problem-card { background: #0d1b2a; border: 1px solid rgba(239,68,68,0.15); border-radius: 8px; padding: 12px; }
+  .problem-icon { font-size: 18px; margin-bottom: 6px; }
+  .problem-title { color: #f1f5f9; font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+  .problem-desc { color: #64748b; font-size: 10px; line-height: 1.5; }
+
+  /* BENEFITS */
+  .benefits-grid { display:grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .benefit-card { background: #0d1b2a; border: 1px solid rgba(14,165,233,0.15); border-radius: 8px; padding: 12px; }
+  .benefit-icon { width: 32px; height: 32px; background: rgba(14,165,233,0.1); border-radius: 8px; display:flex; align-items:center; justify-content:center; font-size: 16px; margin-bottom: 8px; }
+  .benefit-title { color: #f1f5f9; font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+  .benefit-desc { color: #64748b; font-size: 10px; line-height: 1.5; }
+
+  /* HOW IT WORKS */
+  .steps { display:grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .step { text-align: center; }
+  .step-num { width: 36px; height: 36px; background: linear-gradient(135deg, #0ea5e9, #06b6d4); border-radius: 50%; display:inline-flex; align-items:center; justify-content:center; color: white; font-size: 14px; font-weight: 800; margin-bottom: 8px; }
+  .step-title { color: #f1f5f9; font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+  .step-desc { color: #64748b; font-size: 10px; line-height: 1.5; }
+  .step-arrow { color: #0ea5e9; font-size: 18px; }
+
+  /* USE CASES */
+  .cases-grid { display:grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .case-card { background: #0d1b2a; border: 1px solid rgba(14,165,233,0.12); border-radius: 8px; padding: 12px; }
+  .case-icon { font-size: 18px; margin-bottom: 6px; }
+  .case-title { color: #0ea5e9; font-size: 11px; font-weight: 600; }
+  .case-desc { color: #64748b; font-size: 10px; margin-top: 4px; line-height: 1.4; }
+
+  /* TESTIMONIALS */
+  .testi-grid { display:grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .testi-card { background: #0d1b2a; border: 1px solid rgba(14,165,233,0.12); border-radius: 8px; padding: 14px; }
+  .testi-stars { color: #f59e0b; font-size: 12px; margin-bottom: 8px; }
+  .testi-quote { color: #94a3b8; font-size: 11px; line-height: 1.5; font-style: italic; margin-bottom: 10px; }
+  .testi-author { color: #f1f5f9; font-size: 11px; font-weight: 600; }
+  .testi-role { color: #475569; font-size: 10px; }
+
+  /* FAQ */
+  .faq-list { display:flex; flex-direction:column; gap: 8px; }
+  .faq-item { background: #0d1b2a; border: 1px solid rgba(14,165,233,0.1); border-radius: 8px; padding: 12px; }
+  .faq-q { color: #f1f5f9; font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+  .faq-a { color: #64748b; font-size: 11px; line-height: 1.5; }
+
+  /* FINAL CTA */
+  .final-cta { background: linear-gradient(135deg, rgba(14,165,233,0.1), rgba(6,182,212,0.05)); border: 1px solid rgba(14,165,233,0.2); border-radius: 12px; padding: 28px; text-align: center; }
+  .final-cta h2 { font-size: 20px; font-weight: 800; margin-bottom: 8px; }
+  .final-cta h2 span { background: linear-gradient(90deg, #0ea5e9, #06b6d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .final-cta p { color: #64748b; font-size: 12px; margin-bottom: 16px; }
+
+  /* FOOTER */
+  .footer { display:flex; justify-content:space-between; align-items:center; padding: 0 4px; }
+  .footer-logo { color: #0ea5e9; font-size: 14px; font-weight: 800; }
+  .footer-links { display:flex; gap: 16px; }
+  .footer-link { color: #475569; font-size: 10px; }
+  .footer-copy { color: #334155; font-size: 10px; }
+
+  .section-tech { background: rgba(14,165,233,0.04); border: 1px dashed rgba(14,165,233,0.2); border-radius: 6px; padding: 8px 12px; margin-top: 8px; font-size: 10px; color: #475569; }
+  .section-tech span { color: #0ea5e9; }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <div>
+    <div class="page-title">Automatiza360 — Landing Page Design</div>
+    <div class="page-subtitle">Dark Tech · Azul marino/Cyan · React + Vite + Tailwind</div>
+  </div>
+  <div style="color:#475569; font-size:11px;">14 secciones · scroll para ver todo</div>
+</div>
+
+<!-- NAVBAR -->
+<div class="section-block">
+  <div class="section-label">
+    <span class="section-num">0</span>
+    <span class="section-name">Navbar</span>
+    <span style="margin-left:auto; color:#475569; font-size:10px;">Sticky · fondo translúcido con blur</span>
+  </div>
+  <div class="section-body">
+    <div class="navbar">
+      <div class="logo">Automatiza<span style="color:#06b6d4">360</span></div>
+      <div class="nav-links">
+        <span class="nav-link">Cómo funciona</span>
+        <span class="nav-link">Casos de uso</span>
+        <span class="nav-link">Testimonios</span>
+        <span class="nav-link">FAQ</span>
+      </div>
+      <div class="nav-cta">Reserva una llamada →</div>
+    </div>
+  </div>
+</div>
+
+<!-- HERO -->
+<div class="section-block" style="border-color:rgba(14,165,233,0.3);">
+  <div class="section-label" style="background:rgba(14,165,233,0.12);">
+    <span class="section-num">1</span>
+    <span class="section-name">Hero — Principal</span>
+    <span style="margin-left:auto; color:#0ea5e9; font-size:10px;">⭐ Sección más importante</span>
+  </div>
+  <div class="section-body">
+    <div class="hero-layout">
+      <div>
+        <div class="hero-badge">🤖 IA + Automatización para negocios</div>
+        <div class="hero-title">Tu negocio vendiendo<br><span>mientras tú duermes</span></div>
+        <div class="hero-sub">Implementamos automatizaciones e inteligencia artificial para que vendas más, ahorres tiempo y dejes de depender de tareas manuales.</div>
+        <div class="hero-btns">
+          <div class="btn-primary">Reserva tu llamada gratis →</div>
+          <div class="btn-secondary">▷ Ver cómo funciona</div>
+        </div>
+        <div style="margin-top:12px; display:flex; gap:16px;">
+          <span style="color:#475569; font-size:10px;">✓ Sin compromisos</span>
+          <span style="color:#475569; font-size:10px;">✓ Diagnóstico en 30 min</span>
+          <span style="color:#475569; font-size:10px;">✓ +80 empresas</span>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div style="font-size:9px; color:#475569; margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px;">Antes y después de Automatiza360</div>
+        <div class="vis-split">
+          <div class="vis-side">
+            <div class="vis-label before">❌ Antes</div>
+            <div class="vis-item bad">Seguimiento manual por email</div>
+            <div class="vis-item bad">Leads sin respuesta 24h+</div>
+            <div class="vis-item bad">CRM desactualizado</div>
+            <div class="vis-item bad">Reuniones sin agendar</div>
+          </div>
+          <div class="vis-side">
+            <div class="vis-label after">✅ Después</div>
+            <div class="vis-item good">WhatsApp automático al instante</div>
+            <div class="vis-item good">IA clasifica y responde</div>
+            <div class="vis-item good">CRM siempre al día</div>
+            <div class="vis-item good">Agenda sin intervención</div>
+          </div>
+        </div>
+        <div class="vis-metrics">
+          <div class="vis-metric"><div class="vis-metric-val">+40%</div><div class="vis-metric-label">Conversión</div></div>
+          <div class="vis-metric"><div class="vis-metric-val">12h</div><div class="vis-metric-label">Ahorradas/día</div></div>
+          <div class="vis-metric"><div class="vis-metric-val">3.2x</div><div class="vis-metric-label">ROI medio</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CREDIBILIDAD -->
+<div class="section-block">
+  <div class="section-label">
+    <span class="section-num">2</span>
+    <span class="section-name">Credibilidad — Métricas</span>
+  </div>
+  <div class="section-body">
+    <div class="cred-grid">
+      <div class="cred-item"><div class="cred-num">+80</div><div class="cred-label">empresas automatizadas</div></div>
+      <div class="cred-item"><div class="cred-num">12h</div><div class="cred-label">ahorradas por día de media</div></div>
+      <div class="cred-item"><div class="cred-num">3.2x</div><div class="cred-label">ROI en 90 días</div></div>
+      <div class="cred-item"><div class="cred-num">98%</div><div class="cred-label">tasa de respuesta automática</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- PROBLEMAS -->
+<div class="section-block">
+  <div class="section-label">
+    <span class="section-num">3</span>
+    <span class="section-name">Problemas frecuentes del cliente</span>
+  </div>
+  <div class="section-body">
+    <div style="text-align:center; margin-bottom:14px;">
+      <div style="font-size:16px; font-weight:700; color:#f1f5f9;">¿Te suena alguno de estos?</div>
+      <div style="color:#64748b; font-size:11px; margin-top:4px;">Los problemas más comunes que resolvemos cada semana</div>
+    </div>
+    <div class="problems-grid">
+      <div class="problem-card"><div class="problem-icon">⏱️</div><div class="problem-title">Pierdes horas en tareas repetitivas</div><div class="problem-desc">Copiar datos, enviar emails, actualizar hojas de cálculo... tiempo que debería ir a crecer.</div></div>
+      <div class="problem-card"><div class="problem-icon">📉</div><div class="problem-title">Leads que se enfrían sin respuesta</div><div class="problem-desc">Un lead interesado hoy puede estar en la competencia mañana si no respondiste a tiempo.</div></div>
+      <div class="problem-card"><div class="problem-icon">🔗</div><div class="problem-title">Herramientas que no se hablan</div><div class="problem-desc">CRM, email, WhatsApp, formularios... todo por separado. Información duplicada, errores constantes.</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- BENEFICIOS -->
+<div class="section-block">
+  <div class="section-label">
+    <span class="section-num">4</span>
+    <span class="section-name">Beneficios principales</span>
+  </div>
+  <div class="section-body">
+    <div class="benefits-grid">
+      <div class="benefit-card"><div class="benefit-icon">⚡</div><div class="benefit-title">Respuesta inmediata 24/7</div><div class="benefit-desc">Tu negocio responde en segundos a cualquier hora, sin intervención humana.</div></div>
+      <div class="benefit-card"><div class="benefit-icon">🎯</div><div class="benefit-title">Seguimiento comercial automático</div><div class="benefit-desc">Cada lead recibe seguimiento personalizado sin que nadie tenga que recordarlo.</div></div>
+      <div class="benefit-card"><div class="benefit-icon">🔄</div><div class="benefit-title">Todo conectado</div><div class="benefit-desc">WhatsApp, email, CRM, calendario y formularios funcionando como uno solo.</div></div>
+      <div class="benefit-card"><div class="benefit-icon">📈</div><div class="benefit-title">Más ventas, mismo equipo</div><div class="benefit-desc">Aumenta la capacidad sin contratar: la IA hace el trabajo repetitivo.</div></div>
+      <div class="benefit-card"><div class="benefit-icon">🧠</div><div class="benefit-title">Decisiones con datos reales</div><div class="benefit-desc">Paneles automáticos con métricas de ventas, leads y conversiones actualizadas.</div></div>
+      <div class="benefit-card"><div class="benefit-icon">🚀</div><div class="benefit-title">Implementación en días</div><div class="benefit-desc">No meses de consultoría. Sistemas funcionando en tu negocio en 1-2 semanas.</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- CÓMO FUNCIONA -->
+<div class="section-block">
+  <div class="section-label">
+    <span class="section-num">5</span>
+    <span class="section-name">Cómo funciona — 3 pasos</span>
+  </div>
+  <div class="section-body">
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-title">Diagnóstico gratuito</div>
+        <div class="step-desc">Analizamos tu negocio, detectamos cuellos de botella y oportunidades de automatización en 30 minutos.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-title">Diseño e implementación</div>
+        <div class="step-desc">Construimos los flujos personalizados, integramos tus herramientas y lo dejamos funcionando.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-title">Tu negocio en piloto automático</div>
+        <div class="step-desc">Resultados medibles desde la primera semana. Tú te enfocas en crecer, nosotros en mantener.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CASOS DE USO -->
+<div class="section-block">
+  <div class="section-label">
+    <span class="section-num">6</span>
+    <span class="section-name">Casos de uso</span>
+  </div>
+  <div class="section-body">
+    <div class="cases-grid">
+      <div class="case-card"><div class="case-icon">🎯</div><div class="case-title">Captación de leads</div><div class="case-desc">Formularios → CRM + notificación instantánea</div></div>
+      <div class="case-card"><div class="case-icon">💬</div><div class="case-title">Seguimiento WhatsApp</div><div class="case-desc">Secuencias automáticas post-contacto</div></div>
+      <div class="case-card"><div class="case-icon">📅</div><div class="case-title">Agendado automático</div><div class="case-desc">Reuniones sin ida y vuelta de emails</div></div>
+      <div class="case-card"><div class="case-icon">🤖</div><div class="case-title">IA clasifica leads</div><div class="case-desc">Priorización automática por interés y perfil</div></div>
+      <div class="case-card"><div class="case-icon">🎧</div><div class="case-title">Atención al cliente</div><div class="case-desc">Respuestas automáticas a preguntas frecuentes</div></div>
+      <div class="case-card"><div class="case-icon">📄</div><div class="case-title">Presupuestos automáticos</div><div class="case-desc">Generación y envío sin intervención manual</div></div>
+      <div class="case-card"><div class="case-icon">🔗</div><div class="case-title">Sync CRM</div><div class="case-desc">Datos siempre actualizados entre herramientas</div></div>
+      <div class="case-card" style="border-style:dashed; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:4px;">
+        <div style="color:#0ea5e9; font-size:18px;">+</div>
+        <div style="color:#475569; font-size:10px; text-align:center;">Tu caso de uso personalizado</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TESTIMONIOS -->
+<div class="section-block">
+  <div class="section-label">
+    <span class="section-num">7</span>
+    <span class="section-name">Testimonios</span>
+  </div>
+  <div class="section-body">
+    <div class="testi-grid">
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <div class="testi-quote">"Pasamos de perder leads a responder en segundos. En 3 semanas ya recuperamos lo invertido."</div>
+        <div class="testi-author">María G.</div>
+        <div class="testi-role">Directora Comercial · Agencia de Marketing</div>
+      </div>
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <div class="testi-quote">"Mi equipo ahorra 3 horas diarias. Lo que antes era manual ahora simplemente ocurre solo."</div>
+        <div class="testi-author">Carlos M.</div>
+        <div class="testi-role">CEO · Consultoría B2B</div>
+      </div>
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <div class="testi-quote">"Teníamos leads pero no seguimiento. Ahora el CRM se actualiza solo y las reuniones se agendan solas."</div>
+        <div class="testi-author">Laura P.</div>
+        <div class="testi-role">Fundadora · Infoproductos</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FAQ -->
+<div class="section-block">
+  <div class="section-label">
+    <span class="section-num">8</span>
+    <span class="section-name">FAQ</span>
+  </div>
+  <div class="section-body">
+    <div class="faq-list">
+      <div class="faq-item"><div class="faq-q">¿Cuánto tiempo tarda la implementación?</div><div class="faq-a">Entre 1 y 2 semanas según la complejidad. Los primeros flujos suelen estar activos en 3-5 días.</div></div>
+      <div class="faq-item"><div class="faq-q">¿Necesito cambiar mis herramientas actuales?</div><div class="faq-a">No. Trabajamos con las herramientas que ya usas: WhatsApp, Gmail, HubSpot, Notion, Calendly, etc.</div></div>
+      <div class="faq-item"><div class="faq-q">¿Qué pasa si algo falla?</div><div class="faq-a">Monitorizamos los sistemas y tienes soporte directo. Los errores se detectan antes de que los veas.</div></div>
+      <div class="faq-item"><div class="faq-q">¿Es para empresas grandes o pequeñas?</div><div class="faq-a">Para pymes y negocios digitales de 1 a 50 personas. Precisamente donde la automatización tiene más impacto.</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- CTA FINAL -->
+<div class="section-block" style="border-color:rgba(14,165,233,0.3);">
+  <div class="section-label" style="background:rgba(14,165,233,0.1);">
+    <span class="section-num">9</span>
+    <span class="section-name">CTA Final</span>
+    <span style="margin-left:auto; color:#0ea5e9; font-size:10px;">⭐ Segunda sección más importante</span>
+  </div>
+  <div class="section-body">
+    <div class="final-cta">
+      <div style="font-size:11px; color:#0ea5e9; font-weight:600; letter-spacing:1px; text-transform:uppercase; margin-bottom:8px;">Diagnóstico gratuito</div>
+      <h2>¿Listo para que tu negocio<br><span>trabaje solo?</span></h2>
+      <p>30 minutos. Sin compromiso. Detectamos exactamente qué automatizar para que veas resultados en días.</p>
+      <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+        <div class="btn-primary" style="font-size:13px; padding:12px 24px;">Reserva tu diagnóstico gratuito →</div>
+      </div>
+      <div style="margin-top:10px; color:#334155; font-size:10px;">✓ Sin tarjeta de crédito &nbsp;·&nbsp; ✓ Resultados medibles &nbsp;·&nbsp; ✓ +80 empresas confían</div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="section-block">
+  <div class="section-label">
+    <span class="section-num">10</span>
+    <span class="section-name">Footer</span>
+  </div>
+  <div class="section-body">
+    <div class="footer">
+      <div class="footer-logo">Automatiza<span style="color:#06b6d4">360</span></div>
+      <div class="footer-links">
+        <span class="footer-link">Política de privacidad</span>
+        <span class="footer-link">Aviso legal</span>
+        <span class="footer-link">Contacto</span>
+      </div>
+      <div class="footer-copy">© 2025 Automatiza360. Todos los derechos reservados.</div>
+    </div>
+  </div>
+</div>
+
+<div style="height:24px;"></div>
+
+</body>
+</html>
