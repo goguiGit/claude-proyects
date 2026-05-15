@@ -56,3 +56,19 @@ test('Benefits renders 6 benefit cards', () => {
   render(<Benefits />)
   expect(screen.getAllByRole('article')).toHaveLength(6)
 })
+
+import HowItWorks from '../components/HowItWorks'
+import UseCases from '../components/UseCases'
+
+test('HowItWorks renders 3 steps', () => {
+  render(<HowItWorks />)
+  expect(screen.getByText('Diagnóstico gratuito')).toBeInTheDocument()
+  expect(screen.getByText('Diseño e implementación')).toBeInTheDocument()
+  expect(screen.getByText(/piloto automático/)).toBeInTheDocument()
+})
+
+test('UseCases renders use case cards', () => {
+  render(<UseCases />)
+  expect(screen.getByText('Captación de leads')).toBeInTheDocument()
+  expect(screen.getByText('Agendado automático')).toBeInTheDocument()
+})
