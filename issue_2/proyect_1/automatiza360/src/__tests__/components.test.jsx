@@ -100,3 +100,12 @@ test('Footer renders logo and copyright', () => {
   expect(screen.getAllByText(/Automatiza/)[0]).toBeInTheDocument()
   expect(screen.getByText(/2025/)).toBeInTheDocument()
 })
+
+import App from '../App'
+
+test('App renders all major sections', () => {
+  render(<App />)
+  expect(screen.getByText(/Tu negocio vendiendo/)).toBeInTheDocument()
+  expect(screen.getAllByText(/Cómo funciona/i)[0]).toBeInTheDocument()
+  expect(screen.getByText(/Lo que dicen/)).toBeInTheDocument()
+})
