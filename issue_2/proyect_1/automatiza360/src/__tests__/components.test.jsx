@@ -72,3 +72,31 @@ test('UseCases renders use case cards', () => {
   expect(screen.getByText('Captación de leads')).toBeInTheDocument()
   expect(screen.getByText('Agendado automático')).toBeInTheDocument()
 })
+
+import Testimonials from '../components/Testimonials'
+import FAQ from '../components/FAQ'
+import FinalCTA from '../components/FinalCTA'
+import Footer from '../components/Footer'
+
+test('Testimonials renders 3 quotes', () => {
+  render(<Testimonials />)
+  expect(screen.getByText(/recuperamos lo invertido/)).toBeInTheDocument()
+  expect(screen.getByText(/María G\./)).toBeInTheDocument()
+})
+
+test('FAQ renders all questions', () => {
+  render(<FAQ />)
+  expect(screen.getByText(/Cuánto tiempo tarda/)).toBeInTheDocument()
+  expect(screen.getByText(/cambiar mis herramientas/)).toBeInTheDocument()
+})
+
+test('FinalCTA renders main CTA button', () => {
+  render(<FinalCTA />)
+  expect(screen.getAllByText(/diagnóstico gratuito/i)[0]).toBeInTheDocument()
+})
+
+test('Footer renders logo and copyright', () => {
+  render(<Footer />)
+  expect(screen.getAllByText(/Automatiza/)[0]).toBeInTheDocument()
+  expect(screen.getByText(/2025/)).toBeInTheDocument()
+})
