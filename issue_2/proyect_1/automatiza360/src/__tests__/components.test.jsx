@@ -35,3 +35,24 @@ test('HeroVisual renders Antes/Después labels', () => {
   expect(screen.getAllByText(/Antes/).length).toBeGreaterThan(0)
   expect(screen.getAllByText(/Después/).length).toBeGreaterThan(0)
 })
+
+import Credibility from '../components/Credibility'
+import Problems from '../components/Problems'
+import Benefits from '../components/Benefits'
+
+test('Credibility renders 4 metrics', () => {
+  render(<Credibility />)
+  expect(screen.getByText('+80')).toBeInTheDocument()
+  expect(screen.getByText('3.2x')).toBeInTheDocument()
+})
+
+test('Problems renders pain point cards', () => {
+  render(<Problems />)
+  expect(screen.getByText(/Te suena alguno/)).toBeInTheDocument()
+  expect(screen.getByText(/Leads que se enfrían/)).toBeInTheDocument()
+})
+
+test('Benefits renders 6 benefit cards', () => {
+  render(<Benefits />)
+  expect(screen.getAllByRole('article')).toHaveLength(6)
+})
