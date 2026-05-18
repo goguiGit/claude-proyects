@@ -27,7 +27,7 @@ describe('POST /auth/register', () => {
       .send({ email: 'user@example.com', password: 'password123', name: 'Alice' });
     const res = await request(app)
       .post('/auth/register')
-      .send({ email: 'user@example.com', password: 'other', name: 'Bob' });
+      .send({ email: 'user@example.com', password: 'password456', name: 'Bob' });
 
     expect(res.status).toBe(409);
     expect(res.body).toHaveProperty('error');
