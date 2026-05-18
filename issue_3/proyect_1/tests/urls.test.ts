@@ -49,3 +49,24 @@ describe('GET /urls', () => {
     expect(res.body[1]).toMatchObject({ original_url: 'https://first.com' });
   });
 });
+
+describe('GET /:code', () => {
+  it('redirects 301 to the original URL', async () => {
+    const create = await request(app)
+      .post('/urls')
+      .send({ url: 'https://example.com' });
+    const { code } = create.body as { code: string };
+
+    const res = await request(app).get(`/${code}`).redirects(0);
+
+    expect(res.status).toBe(301);
+    expect(res.headers.location).toBe('https://example.com');
+  });
+
+  it('returns 404 for an unknown code', async () => {
+    const res = await request(app).get('/no-such-code');
+
+    expect(res.status).toBe(404);
+    expect(res.body).toEqual({ error: 'Short URL not found' });
+  });
+});

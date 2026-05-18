@@ -8,7 +8,7 @@ describe('404 handler', () => {
   const app = createApp();
 
   it('returns 404 with JSON for unknown routes', async () => {
-    const res = await request(app).get('/this-does-not-exist');
+    const res = await request(app).get('/does/not/exist');
     expect(res.status).toBe(404);
     expect(res.body).toEqual({ error: 'Route not found' });
   });
