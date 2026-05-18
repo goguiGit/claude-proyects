@@ -16,7 +16,14 @@ export function migrate(): void {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       code TEXT UNIQUE NOT NULL,
       original_url TEXT NOT NULL,
-      created_at INTEGER NOT NULL
+      created_at INTEGER NOT NULL,
+      user_id INTEGER
     )
   `);
+
+  try {
+    db.exec('ALTER TABLE urls ADD COLUMN user_id INTEGER');
+  } catch {
+    // column already exists from a previous run
+  }
 }
