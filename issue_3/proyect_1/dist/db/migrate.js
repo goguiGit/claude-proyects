@@ -1,0 +1,20 @@
+import db from './database.js';
+export function migrate() {
+    db.exec(`
+    CREATE TABLE IF NOT EXISTS users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      email TEXT UNIQUE NOT NULL,
+      password_hash TEXT NOT NULL,
+      name TEXT NOT NULL,
+      created_at INTEGER NOT NULL
+    )
+  `);
+    db.exec(`
+    CREATE TABLE IF NOT EXISTS urls (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      code TEXT UNIQUE NOT NULL,
+      original_url TEXT NOT NULL,
+      created_at INTEGER NOT NULL
+    )
+  `);
+}

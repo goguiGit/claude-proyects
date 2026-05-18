@@ -1,0 +1,18 @@
+Contexto: Snap es un servidor Express + TypeScript en fase
+inicial. No tiene logging de peticiones todavía.
+ 
+Tarea: Añade un middleware que registre cada petición HTTP
+entrante con: método, ruta, código de respuesta, y tiempo
+que tardó en milisegundos. Formato de ejemplo:
+GET /health → 200 (12ms)
+ 
+Restricciones:
+- Usa console.log, no instales librerías de logging
+  (ya las añadiremos cuando el proyecto lo necesite)
+- El middleware debe ir al principio de la cadena para
+  capturar todas las peticiones
+- No loguees el body de las peticiones (puede tener passwords)
+ 
+Verificación: Arranca el servidor, haz un curl a /health,
+y muéstrame que el log aparece en la terminal con el formato
+esperado.

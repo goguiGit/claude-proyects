@@ -1,0 +1,17 @@
+Contexto: Vamos a construir "Snap", un acortador de URLs
+con analíticas. Stack: Node.js + Express + TypeScript,
+SQLite con better-sqlite3, Vitest para tests, ESM modules.
+
+Tarea: Inicializa el proyecto completo:
+- Configura package.json con scripts de desarrollo, build y test
+- Configura TypeScript en modo estricto
+- Crea la estructura de carpetas organizada por módulos
+  (urls, auth, dashboard, etc.)
+- Implementa un servidor Express con un endpoint GET /health
+- Añade un test básico que verifique que /health responde correctamente
+
+Restricciones:
+- No uses ORMs, solo better-sqlite3 directo
+- No instales dependencias que no sean necesarias ahora
+
+Verificación: Al terminar ejecuta el build y los tests.

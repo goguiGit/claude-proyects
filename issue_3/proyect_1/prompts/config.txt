@@ -1,0 +1,19 @@
+Contexto: Snap es un servidor Express + TypeScript. Solo tiene
+un endpoint GET /health. Próximamente añadiremos más rutas.
+ 
+Tarea: Añade dos middlewares de Express al final de la cadena:
+- Un handler para rutas no encontradas que devuelva 404
+  con un JSON indicando que la ruta no existe
+- Un handler global de errores que capture cualquier excepción
+  no manejada y devuelva 500 con un mensaje genérico
+  (sin exponer detalles internos)
+ 
+Restricciones:
+- No modifiques el endpoint /health
+- No instales dependencias nuevas, Express ya soporta esto
+- En desarrollo (NODE_ENV !== "production") el error handler
+  puede incluir el mensaje del error; en producción no
+ 
+Verificación: Añade tests que comprueben que una ruta
+inexistente devuelve 404, y que el servidor no se cae
+ante un error inesperado. Ejecútalos.
