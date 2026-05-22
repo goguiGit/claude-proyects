@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PixelForge Gallery</title>
+  <style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    background: #1a1a1a;
+    color: #e0e0e0;
+    font-family: system-ui, sans-serif;
+    padding: 2rem;
+}
+h1 {
+    text-align: center;
+    margin-bottom: 2rem;
+    font-size: 1.8rem;
+    letter-spacing: .05em;
+    color: #fff;
+}
+.gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+}
+figure {
+    background: #2a2a2a;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: transform .2s, box-shadow .2s;
+}
+figure:hover {
+    transform: scale(1.03);
+    box-shadow: 0 8px 24px rgba(0,0,0,.6);
+}
+figure img {
+    width: 100%;
+    height: 300px;
+    object-fit: cover;
+    display: block;
+}
+figcaption {
+    padding: .6rem 1rem;
+    font-size: .85rem;
+    color: #aaa;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+</style>
+</head>
+<body>
+  <h1>PixelForge Gallery</h1>
+  <div class="gallery">
+  <figure>
+    <img src="thumbnails/1.jpg" alt="1.jpg" loading="lazy">
+    <figcaption>1.jpg</figcaption>
+  </figure>
+  <figure>
+    <img src="thumbnails/2.jpg" alt="2.jpg" loading="lazy">
+    <figcaption>2.jpg</figcaption>
+  </figure>
+  <figure>
+    <img src="thumbnails/3.jpg" alt="3.jpg" loading="lazy">
+    <figcaption>3.jpg</figcaption>
+  </figure>
+  <figure>
+    <img src="thumbnails/4.jpg" alt="4.jpg" loading="lazy">
+    <figcaption>4.jpg</figcaption>
+  </figure>
+  </div>
+</body>
+</html>

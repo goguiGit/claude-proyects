@@ -1,0 +1,11 @@
+Quiero construir PixelForge, un pipeline de procesamiento de imágenes
+en Python que:
+1. Lee imágenes JPG/PNG de una carpeta input/
+2. Genera thumbnails de 300x300
+3. Aplica un filtro de viñeta (bordes oscurecidos)
+4. Añade un watermark semitransparente con el texto "© PixelForge"
+5. Genera una galería web responsive con HTML/CSS
+6. Usa Pillow para el procesamiento
+
+Propón la estructura del proyecto, las dependencias y el plan
+de implementación. No ejecutes nada.
