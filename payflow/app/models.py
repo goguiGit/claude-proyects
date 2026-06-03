@@ -66,6 +66,20 @@ class PaymentStatusUpdate(BaseModel):
     status: PaymentStatus
 
 
+class PartialRefundRequest(BaseModel):
+    """Payload para solicitar un reembolso parcial."""
+    amount: float
+    reason: Optional[str] = None
+
+    @field_validator("amount")
+    @classmethod
+    def amount_must_be_positive(cls, v: float) -> float:
+        """Valida que el importe del reembolso sea positivo."""
+        if v <= 0:
+            raise ValueError("El importe del reembolso debe ser mayor que cero")
+        return v
+
+
 class PaymentResponse(BaseModel):
     """Representación completa de un pago en las respuestas."""
     id: str

@@ -86,6 +86,18 @@ async def get_payment(
     return _row_to_payment(row)
 
 
+async def get_payments_by_email(
+    db: aiosqlite.Connection, email: str
+) -> list[PaymentResponse]:
+    """Devuelve todos los pagos asociados a un email de cliente."""
+    async with db.execute(
+        "SELECT * FROM payments WHERE customer_email = ? ORDER BY created_at DESC",
+        (email,),
+    ) as cursor:
+        rows = await cursor.fetchall()
+    return [_row_to_payment(r) for r in rows]
+
+
 async def update_payment_status(
     db: aiosqlite.Connection,
     payment_id: str,

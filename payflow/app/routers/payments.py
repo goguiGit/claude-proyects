@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, Header
 import aiosqlite
 
 from app.database import get_db
-from app.models import MerchantResponse, PaymentCreate, PaymentResponse, PaymentStatusUpdate
+from app.models import MerchantResponse, PartialRefundRequest, PaymentCreate, PaymentResponse, PaymentStatusUpdate
 from app.services import merchant_service, payment_service
 
 router = APIRouter(prefix="/payments", tags=["Payments"])
@@ -46,6 +46,17 @@ async def get_payment(
 ) -> PaymentResponse:
     """Devuelve el detalle de un pago del merchant autenticado."""
     return await payment_service.get_payment(db, payment_id, merchant.id)
+
+
+@router.post("/{payment_id}/partial-refund", response_model=PaymentResponse, status_code=200)
+async def partial_refund(
+    payment_id: str,
+    body: PartialRefundRequest,
+    db: aiosqlite.Connection = Depends(get_db),
+    merchant: MerchantResponse = Depends(_get_merchant_from_api_key),
+) -> PaymentResponse:
+    """Solicita un reembolso parcial sobre un pago completado."""
+    return await payment_service.partial_refund(db, payment_id, merchant.id, body)
 
 
 @router.patch("/{payment_id}/status", response_model=PaymentResponse)
