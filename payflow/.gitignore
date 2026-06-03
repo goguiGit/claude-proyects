@@ -34,3 +34,12 @@ htmlcov/
 # Sistema
 .DS_Store
 Thumbs.db
+
+# Hook test artifacts
+test_secret.txt
+test_conn.txt
+test_oauth.txt
+test_chain.txt
+
+# Hook logs
+.claude/logs/
