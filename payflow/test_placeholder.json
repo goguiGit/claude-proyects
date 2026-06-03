@@ -1,0 +1,4 @@
+{
+  "password": "$(MySecretPassword)",
+  "clientSecret": "$(OauthOptions-ClientSecret)"
+}
