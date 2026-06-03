@@ -11,6 +11,26 @@
             "async": true
           }
         ]
+      },
+      {
+        "matcher": "Bash|Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"$CLAUDE_PROJECT_DIR/.claude/hooks/security_gate.py\"",
+            "shell": "bash"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"$CLAUDE_PROJECT_DIR/.claude/hooks/dotnet_security.py\"",
+            "shell": "bash"
+          }
+        ]
       }
     ]
   }
