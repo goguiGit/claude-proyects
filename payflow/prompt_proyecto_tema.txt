@@ -1,0 +1,96 @@
+Contexto: Vamos a construir "PayFlow", una API REST simplificada
+de procesamiento de pagos para una startup fintech. Es un proyecto
+educativo que servirá como base para practicar hooks de Claude Code.
+Stack: Python 3.12+, FastAPI, SQLite con aiosqlite, Pydantic v2
+para validación, pytest para tests, uvicorn como servidor.
+No usamos ORM: queries SQL directas con aiosqlite.
+
+Tarea: Crea el proyecto completo con esta estructura y funcionalidad:
+
+1. Estructura de carpetas:
+   payflow-api/
+   ├── app/
+   │   ├── main.py              # FastAPI app con lifespan, CORS
+   │   ├── database.py          # Conexión SQLite, creación de tablas
+   │   ├── models.py            # Modelos Pydantic (request/response)
+   │   ├── routers/
+   │   │   ├── payments.py      # CRUD de pagos
+   │   │   ├── merchants.py     # CRUD de merchants
+   │   │   └── health.py        # Health check
+   │   └── services/
+   │       ├── payment_service.py   # Lógica de negocio de pagos
+   │       └── merchant_service.py  # Lógica de negocio de merchants
+   ├── tests/
+   │   ├── conftest.py          # Fixtures: test client, DB temporal
+   │   ├── test_health.py
+   │   ├── test_payments.py
+   │   └── test_merchants.py
+   ├── frontend/
+   │   └── index.html           # Mini dashboard (un solo HTML con
+   │                               CSS y JS inline) para probar la API
+   ├── pyproject.toml
+   ├── .gitignore
+   └── README.md
+
+2. Base de datos SQLite con dos tablas:
+   - merchants: id (TEXT UUID), name, email, api_key (generada),
+     status (active/suspended), created_at
+   - payments: id (TEXT UUID), merchant_id (FK), amount (REAL),
+     currency (TEXT, default EUR), status (pending/completed/failed/refunded),
+     description, customer_email, created_at, updated_at
+
+3. Endpoints:
+   - GET  /health                → status, versión, timestamp
+   - POST /merchants             → crear merchant (devuelve api_key)
+   - GET  /merchants             → listar merchants
+   - GET  /merchants/{id}        → detalle de merchant
+   - POST /payments              → crear pago (requiere header X-API-Key válido)
+   - GET  /payments              → listar pagos del merchant (filtro por api_key)
+   - GET  /payments/{id}         → detalle de pago
+   - PATCH /payments/{id}/status → cambiar estado (pending→completed,
+                                    pending→failed, completed→refunded)
+   Las transiciones de estado inválidas deben devolver 400.
+
+4. Frontend (frontend/index.html): Un único archivo HTML con todo
+   inline (CSS + JS, sin dependencias externas). Dashboard sencillo
+   con estas secciones:
+   - Header con nombre "PayFlow Dashboard"
+   - Formulario para crear un merchant (nombre + email)
+   - Sección que muestra el api_key del merchant creado
+   - Formulario para crear un pago (amount, currency, description,
+     customer_email) usando la api_key del merchant
+   - Tabla que lista los pagos del merchant con botones para
+     cambiar estado (Complete, Fail, Refund según estado actual)
+   - Sección de health check que muestra el estado de la API
+   Estilo visual limpio y moderno, colores oscuros tipo fintech.
+   Usa fetch() para todas las llamadas a la API en localhost:8000.
+
+5. Tests con pytest + httpx (AsyncClient):
+   - test_health: verificar que /health responde 200
+   - test_merchants: crear, listar, obtener por ID
+   - test_payments: crear pago con api_key válida, sin api_key (401),
+     listar pagos, transición de estado válida e inválida
+
+Restricciones:
+- No uses SQLAlchemy ni ningún ORM
+- No uses dependencias externas en el frontend (solo HTML/CSS/JS vanilla)
+- Todas las respuestas de error deben usar HTTPException con mensajes claros
+- Los UUIDs se generan con uuid4()
+- El api_key de merchant se genera como "pk_" + 32 chars hex aleatorios
+- Las queries SQL usan parámetros (?) para evitar inyección SQL
+- Configura CORS para permitir cualquier origen (es un proyecto educativo)
+- El archivo main.py debe servir el frontend como archivos estáticos
+  en la ruta /dashboard (usando StaticFiles de FastAPI apuntando a frontend/)
+- Crea un entorno virtual de Python para este proyecto
+- No guardes el proyecto en git ni ejecutes ningún comando git
+
+Formato:
+- Código con type hints en todas las funciones
+- Docstrings en español en las funciones principales
+- pyproject.toml con las dependencias: fastapi, uvicorn, aiosqlite, pydantic, pytest, httpx, pytest-asyncio
+
+Verificación: Al terminar:
+1. Ejecuta los tests con: python -m pytest tests/ -v
+2. Confirma que todos pasan
+3. Arranca el servidor con: python -m uvicorn app.main:app --reload
+   y verifica que GET http://localhost:8000/health responde correctamente
