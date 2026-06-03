@@ -184,6 +184,54 @@ git commit -m "pipeline placeholders"
 
 ---
 
+## HOOK 4 · .NET Test Gate (PowerShell, PreToolUse)
+**Dispara en:** `Bash` cuando contiene `git commit` o `git push`
+**Acción:** ejecuta `dotnet test` sobre toda la solución (unit + integration). Bloquea si algún test falla.
+
+---
+
+### TEST 4.1 — Commit bloqueado por tests fallidos
+**Situación:** existe un `.sln` en el proyecto y hay tests que no pasan
+```
+Rompe un test existente editando un assert para que falle, luego intenta:
+git add .
+git commit -m "test con fallo"
+```
+**Resultado esperado:** ❌ `Tests fallidos. Commit/push bloqueado hasta que todos los tests pasen (unit + integration).`
+
+---
+
+### TEST 4.2 — Push bloqueado por tests fallidos
+**Situación:** igual que 4.1 pero con `git push`
+```
+Con el test roto del caso anterior, intenta:
+git push
+```
+**Resultado esperado:** ❌ `Tests fallidos. Commit/push bloqueado hasta que todos los tests pasen (unit + integration).`
+
+---
+
+### TEST 4.3 — Commit permitido cuando todos los tests pasan
+**Situación:** todos los tests en verde
+```
+Restaura el test roto, luego:
+git add .
+git commit -m "todos los tests en verde"
+```
+**Resultado esperado:** ✅ `>> Todos los tests pasaron. Continuando.` — commit realizado.
+
+---
+
+### TEST 4.4 — No-op en proyecto sin solución .NET
+**Situación:** el proyecto no tiene archivo `.sln` (ej. este repo Python/FastAPI)
+```
+git add .
+git commit -m "proyecto python sin sln"
+```
+**Resultado esperado:** ✅ El hook no encuentra `.sln` y deja pasar sin ejecutar nada.
+
+---
+
 ## Resumen esperado al finalizar
 
 | # | Test | Hook | Resultado |
@@ -200,3 +248,7 @@ git commit -m "pipeline placeholders"
 | 3.3 | Commit con `clientSecret=valor` bloqueado | dotnet_security | ❌ Bloqueado |
 | 3.4 | `git add && git commit` encadenado bloqueado | dotnet_security | ❌ Bloqueado |
 | 3.5 | Placeholders `$(Var)` no bloqueados | dotnet_security | ✅ Permitido |
+| 4.1 | Commit bloqueado con tests fallidos | dotnet_test_gate | ❌ Bloqueado |
+| 4.2 | Push bloqueado con tests fallidos | dotnet_test_gate | ❌ Bloqueado |
+| 4.3 | Commit permitido con tests en verde | dotnet_test_gate | ✅ Permitido |
+| 4.4 | No-op en proyecto sin `.sln` | dotnet_test_gate | ✅ Permitido |

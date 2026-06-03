@@ -13,6 +13,16 @@
         ]
       },
       {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "shell": "powershell",
+            "command": "$inp = $Input | ConvertFrom-Json; $cmd = $inp.tool_input.command; if ($cmd -match 'git\\s+(commit|push)') { $sln = Get-ChildItem -Path $env:CLAUDE_PROJECT_DIR -Filter '*.sln' -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1; if ($sln) { Write-Host '>> Ejecutando todos los tests .NET antes de continuar...'; dotnet test $sln.FullName --logger 'console;verbosity=minimal'; if ($LASTEXITCODE -ne 0) { Write-Error 'Tests fallidos. Commit/push bloqueado hasta que todos los tests pasen (unit + integration).'; exit 1 } else { Write-Host '>> Todos los tests pasaron. Continuando.' } } }"
+          }
+        ]
+      },
+      {
         "matcher": "Bash|Write|Edit|MultiEdit",
         "hooks": [
           {
@@ -29,6 +39,30 @@
             "type": "command",
             "command": "python \"$CLAUDE_PROJECT_DIR/.claude/hooks/dotnet_security.py\"",
             "shell": "bash"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash|Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "Eres un revisor de código para un proyecto FastAPI en Python. Analiza la siguiente acción de edición de código: $ARGUMENTS. Verifica estas convenciones: 1) Todas las funciones tienen type hints en parámetros y retorno. 2) Las funciones públicas tienen docstring. 3) Las queries SQL usan parámetros (?) en vez de f-strings. 4) Los endpoints FastAPI usan modelos Pydantic para request y response. 5) No hay secrets hardcodeados (API keys, passwords, tokens literales). Si alguna convención se viola, responde que SÍ hay problema y explica cuál. Si todo está correcto, responde que NO hay problema.",
+            "timeout": 45
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "agent",
+        "hooks": [
+          {
+            "type": "agent",
+            "prompt": "Eres un verificador de calidad para el proyecto PayFlow (FastAPI + Python). Tu trabajo es inspeccionar el estado del proyecto antes de que el desarrollador dé por terminada la tarea actual. Haz lo siguiente: 1) Usa Glob para encontrar todos los archivos .py en app/ y tests/. 2) Usa Grep para buscar funciones sin type hints (def.*:$ sin -> en la misma línea). 3) Usa Grep para buscar queries SQL con f-strings (f\".*SELECT|f\".*INSERT|f\".*UPDATE|f\".*DELETE). 4) Usa Grep para buscar TODO o FIXME pendientes en app/. 5) Verifica que existan archivos de test para cada router (test_payments.py, test_merchants.py, test_health.py). Si encuentras problemas en los puntos 2, 3 o 5, responde con decision block explicando qué hay que corregir. Los TODOs del punto 4 repórtalos como advertencia pero no bloquees. Si todo está correcto, permite que Claude termine.",
+            "timeout": 120
           }
         ]
       }
