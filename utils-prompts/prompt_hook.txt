@@ -1,0 +1,13 @@
+----- Prompt Hook -----
+
+{
+  "type": "prompt",
+  "prompt": "Eres un revisor de código para un proyecto FastAPI en Python. Analiza la siguiente acción de edición de código: $ARGUMENTS. Verifica estas convenciones: 1) Todas las funciones tienen type hints en parámetros y retorno. 2) Las funciones públicas tienen docstring. 3) Las queries SQL usan parámetros (?) en vez de f-strings. 4) Los endpoints FastAPI usan modelos Pydantic para request y response. 5) No hay secrets hardcodeados (API keys, passwords, tokens literales). Si alguna convención se viola, responde que SÍ hay problema y explica cuál. Si todo está correcto, responde que NO hay problema.",
+  "timeout": 45
+}
+
+
+----- Prompt -----
+
+Añade una función a app/services/payment_service.py que busque
+pagos por email. Hazlo rápido, sin type hints ni docstring.

@@ -1,0 +1,28 @@
+----- Command Hook 1 -----
+
+{
+  "type": "command",
+  "command": "jq -r '[.session_id, .tool_input.command] | @tsv' | while read sid cmd; do printf '{\"ts\":\"%s\",\"session\":\"%s\",\"cmd\":\"%s\"}\\n' \"$(date -Is)\" \"$sid\" \"$cmd\" >> \"$CLAUDE_PROJECT_DIR\"/.claude/logs/audit.jsonl; done; exit 0",
+  "async": true
+}
+
+
+----- Command Hook 2 -----
+
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$input = $Input | ConvertFrom-Json; $entry = @{ts=(Get-Date -Format o); session=$input.session_id; cmd=$input.tool_input.command} | ConvertTo-Json -Compress; $logDir = Join-Path $env:CLAUDE_PROJECT_DIR '.claude/logs'; New-Item -ItemType Directory -Force -Path $logDir | Out-Null; Add-Content -Path (Join-Path $logDir 'audit.jsonl') -Value $entry",
+            "shell": "powershell",
+            "async": true
+          }
+        ]
+      }
+    ]
+  }
+}

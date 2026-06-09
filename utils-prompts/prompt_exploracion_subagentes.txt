@@ -1,0 +1,16 @@
+Necesito entender este proyecto antes de empezar a trabajar.
+Usa subagentes para hacer estas 3 investigaciones en paralelo:
+
+1. Un subagente que explore src/auth/ y documente el flujo completo
+   de autenticación: cómo se generan tokens, qué roles existen,
+   cómo se protegen las rutas.
+
+2. Un subagente que explore src/patients/ y src/health-metrics/ y
+   documente el modelo de datos: qué entidades hay, qué relaciones
+   tienen, qué validaciones se aplican.
+
+3. Un subagente que ejecute los tests existentes (npm test) y me
+   reporte: cuántos pasan, cuántos fallan, qué cobertura hay,
+   y qué áreas NO tienen tests.
+
+Dame un resumen consolidado de los tres resultados.

@@ -1,0 +1,9 @@
+Crea un agente llamado "security-reviewer" especializado en 
+revisar seguridad de aplicaciones healthcare. Que use tools Read, Grep, 
+Glob y Bash con modelo sonnet. Que revise: autenticación JWT y RBAC 
+(doctor/patient/admin), protección de datos PII, SQL injection, 
+validación de inputs, rate limiting, CORS y error leaking. El output 
+debe ser por finding con file:line, severidad (Critical/High/Medium/Low), 
+categoría OWASP y fix concreto. Priorizar vulnerabilidades reales sobre 
+estilo, y vigilar especialmente que datos de pacientes no se filtren en 
+respuestas de error.

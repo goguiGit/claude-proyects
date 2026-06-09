@@ -1,0 +1,16 @@
+Estoy evaluando si HealthTrack debería migrar de SQLite a PostgreSQL.
+Crea un agent team para investigar esto desde diferentes ángulos:
+
+- Un teammate investiga el impacto en el código actual: qué queries
+  son incompatibles, qué ORM patterns cambiarían, cuántos archivos
+  se afectan.
+
+- Un teammate investiga las ventajas para nuestro caso de uso:
+  concurrencia con múltiples doctores, JSON columns para métricas,
+  full-text search en notas clínicas.
+
+- Un teammate hace de abogado del diablo: razones para quedarnos
+  en SQLite, costes de migración, riesgos.
+
+Que los tres discutan sus hallazgos entre sí y lleguen a una
+recomendación consensuada.

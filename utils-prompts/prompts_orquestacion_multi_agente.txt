@@ -1,0 +1,58 @@
+----- Prompt 1 -----
+
+Quiero añadir validación de formato para números de teléfono de pacientes.
+
+1. Lanza un subagente con Haiku para explorar:
+   - Dónde se reciben números de teléfono (endpoints, formularios)
+   - Qué validaciones existen actualmente
+   - Qué formatos se usan en los datos existentes
+
+2. Con esos resultados, planifica los cambios (tú, con Sonnet)
+
+3. Lanza subagentes paralelos con Sonnet:
+   - Subagente A: Implementa la validación en src/patients/
+   - Subagente B: Añade tests para la nueva validación
+   - Subagente C: Actualiza la documentación de la API
+
+4. Integra resultados y ejecuta la suite completa de tests
+
+
+----- Prompt 2 -----
+
+Necesito implementar un sistema de alertas de salud para HealthTrack.
+
+Requisitos:
+- Cuando se registra una métrica de salud fuera de rangos normales,
+  se debe crear una alerta automática
+- Los doctores deben poder ver las alertas de sus pacientes
+- Las alertas tienen severidad: warning (cercano al límite) y critical (fuera de rango)
+- Rangos normales: glucosa 70-100 mg/dL, presión sistólica 90-120, diastólica 60-80
+
+Plan de trabajo con subagentes:
+
+1. @db-analyst Analiza los datos actuales: ¿cuántas métricas existentes
+   están fuera de rango? ¿Qué distribución tienen? Esto nos da contexto
+   del impacto.
+
+2. @api-documenter Documenta los endpoints actuales de health-metrics
+   como referencia antes de los cambios.
+
+3. Implementa:
+   - Modelo de Alert (id, patientId, metricType, value, severity, createdAt, acknowledged)
+   - Lógica que crea alerts al registrar métricas fuera de rango
+   - Endpoint GET /api/alerts/:patientId (requiere rol doctor o el propio paciente)
+   - Endpoint PATCH /api/alerts/:id/acknowledge (marca alerta como vista)
+
+4. @security-reviewer Revisa los nuevos endpoints: acceso autorizado,
+   no hay leak de datos entre pacientes, audit logging.
+
+5. @test-engineer Genera tests exhaustivos:
+   - Creación de alerta con métricas fuera de rango
+   - No creación con métricas normales
+   - Boundary values (exactamente en el límite)
+   - Autorización (doctor solo ve sus pacientes, paciente solo ve los suyos)
+
+6. @api-documenter Documenta los nuevos endpoints de alertas.
+
+Ejecuta los pasos 1-2 en paralelo, luego 3, luego 4-5 en paralelo,
+luego 6. Dame resumen consolidado después de cada fase.

@@ -1,0 +1,15 @@
+----- Agent Hook -----
+
+{
+  "type": "agent",
+  "prompt": "Eres un verificador de calidad para el proyecto PayFlow (FastAPI + Python). Tu trabajo es inspeccionar el estado del proyecto antes de que el desarrollador dé por terminada la tarea actual. Haz lo siguiente: 1) Usa Glob para encontrar todos los archivos .py en app/ y tests/. 2) Usa Grep para buscar funciones sin type hints (def.*:$ sin -> en la misma línea). 3) Usa Grep para buscar queries SQL con f-strings (f\".*SELECT|f\".*INSERT|f\".*UPDATE|f\".*DELETE). 4) Usa Grep para buscar TODO o FIXME pendientes en app/. 5) Verifica que existan archivos de test para cada router (test_payments.py, test_merchants.py, test_health.py). Si encuentras problemas en los puntos 2, 3 o 5, responde con decision block explicando qué hay que corregir. Los TODOs del punto 4 repórtalos como advertencia pero no bloquees. Si todo está correcto, permite que Claude termine.",
+  "timeout": 120
+}
+
+
+
+----- Prompt -----
+
+Añade un nuevo endpoint POST /payments/{id}/partial-refund
+que permita reembolsos parciales. Implementa solo el router,
+no el servicio ni los tests.
