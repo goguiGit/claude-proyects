@@ -1,0 +1,359 @@
+Genera el proyecto completo "HealthTrack API" — una API REST de seguimiento de salud con interfaz visual. Este proyecto es el proyecto troncal de un curso donde los alumnos aprenderán a usar subagentes de Claude Code, por lo que necesita:
+
+1. Ser funcional de verdad (no mocks) con datos realistas
+2. Tener múltiples módulos independientes para poder paralelizar trabajo con subagentes
+3. Tener áreas de complejidad donde los subagentes aporten valor real (seguridad, testing, documentación)
+4. Incluir bugs intencionales y deuda técnica que los subagentes del curso descubrirán
+
+## Stack técnico
+
+- **Runtime**: Node.js con TypeScript
+- **Framework**: Express
+- **Base de datos**: SQLite con better-sqlite3 (sin ORM, queries directas para que el db-analyst subagent pueda analizarlas)
+- **Tests**: Vitest
+- **Frontend**: Single HTML file con vanilla JS + Tailwind CSS via CDN (sin build step)
+- **Auth**: JWT con bcrypt
+
+## Estructura de carpetas
+
+```
+healthtrack-api/
+├── src/
+│   ├── index.ts                 # Entry point, Express app setup
+│   ├── config.ts                # Configuración centralizada
+│   ├── auth/
+│   │   ├── auth.routes.ts       # POST /auth/register, POST /auth/login
+│   │   ├── auth.service.ts      # Lógica de registro, login, generación JWT
+│   │   ├── auth.middleware.ts    # Middleware de verificación JWT + roles
+│   │   └── auth.types.ts        # Tipos: User, Role, TokenPayload
+│   ├── patients/
+│   │   ├── patients.routes.ts   # CRUD completo de pacientes
+│   │   ├── patients.service.ts  # Lógica de negocio de pacientes
+│   │   ├── patients.validation.ts # Validaciones de input
+│   │   └── patients.types.ts    # Tipos: Patient, CreatePatientDTO
+│   ├── appointments/
+│   │   ├── appointments.routes.ts   # CRUD de citas médicas
+│   │   ├── appointments.service.ts  # Lógica de citas con validaciones de horario
+│   │   ├── appointments.validation.ts
+│   │   └── appointments.types.ts    # Tipos: Appointment, AppointmentStatus
+│   ├── health-metrics/
+│   │   ├── metrics.routes.ts    # CRUD de métricas de salud
+│   │   ├── metrics.service.ts   # Lógica + detección de anomalías
+│   │   ├── metrics.validation.ts
+│   │   └── metrics.types.ts     # Tipos: HealthMetric, MetricType
+│   ├── notifications/
+│   │   ├── notifications.routes.ts  # GET notificaciones por paciente
+│   │   ├── notifications.service.ts # Creación automática de alertas
+│   │   └── notifications.types.ts
+│   ├── middleware/
+│   │   ├── error-handler.ts     # Error handler global
+│   │   ├── audit-logger.ts      # Middleware de audit logging
+│   │   └── rate-limiter.ts      # Rate limiting básico in-memory
+│   └── database/
+│       ├── connection.ts        # Conexión SQLite singleton
+│       ├── migrations.ts        # Sistema de migraciones simple
+│       └── seed.ts              # Datos de ejemplo realistas
+├── public/
+│   └── index.html               # Dashboard visual completo (SPA)
+├── tests/
+│   ├── auth.test.ts             # Tests básicos de auth (INCOMPLETOS a propósito)
+│   ├── patients.test.ts         # Tests de pacientes (faltan edge cases)
+│   └── setup.ts                 # Setup de test con DB en memoria
+├── package.json
+├── tsconfig.json
+├── vitest.config.ts
+├── .gitignore
+├── CLAUDE.md                    # Instrucciones del proyecto para Claude Code
+└── README.md
+```
+
+## Base de datos - Esquema SQLite
+
+```sql
+-- Users: doctores, pacientes, admins
+CREATE TABLE users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    role TEXT NOT NULL CHECK(role IN ('doctor', 'patient', 'admin')),
+    name TEXT NOT NULL,
+    created_at TEXT DEFAULT (datetime('now'))
+);
+
+-- Patients: datos clínicos del paciente (ligado a user con role=patient)
+CREATE TABLE patients (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL REFERENCES users(id),
+    date_of_birth TEXT NOT NULL,
+    gender TEXT CHECK(gender IN ('male', 'female', 'other')),
+    blood_type TEXT CHECK(blood_type IN ('A+','A-','B+','B-','AB+','AB-','O+','O-')),
+    allergies TEXT,           -- JSON array de strings
+    emergency_contact TEXT,   -- Nombre
+    emergency_phone TEXT,     -- Teléfono
+    assigned_doctor_id INTEGER REFERENCES users(id),
+    created_at TEXT DEFAULT (datetime('now'))
+);
+
+-- Appointments: citas médicas
+CREATE TABLE appointments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    patient_id INTEGER NOT NULL REFERENCES patients(id),
+    doctor_id INTEGER NOT NULL REFERENCES users(id),
+    date_time TEXT NOT NULL,
+    duration_minutes INTEGER DEFAULT 30,
+    status TEXT DEFAULT 'scheduled' CHECK(status IN ('scheduled','confirmed','completed','cancelled')),
+    reason TEXT,
+    notes TEXT,               -- Notas del doctor (post-cita)
+    created_at TEXT DEFAULT (datetime('now'))
+);
+
+-- Health Metrics: métricas de salud registradas
+CREATE TABLE health_metrics (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    patient_id INTEGER NOT NULL REFERENCES patients(id),
+    metric_type TEXT NOT NULL CHECK(metric_type IN ('blood_pressure','glucose','weight','heart_rate','temperature','oxygen_saturation')),
+    value REAL NOT NULL,           -- Valor principal
+    secondary_value REAL,          -- Para presión: diastólica
+    unit TEXT NOT NULL,
+    recorded_at TEXT NOT NULL,
+    recorded_by INTEGER REFERENCES users(id),
+    notes TEXT,
+    created_at TEXT DEFAULT (datetime('now'))
+);
+
+-- Notifications: alertas automáticas
+CREATE TABLE notifications (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    patient_id INTEGER NOT NULL REFERENCES patients(id),
+    type TEXT NOT NULL CHECK(type IN ('metric_warning','metric_critical','appointment_reminder','general')),
+    title TEXT NOT NULL,
+    message TEXT NOT NULL,
+    severity TEXT DEFAULT 'info' CHECK(severity IN ('info','warning','critical')),
+    read INTEGER DEFAULT 0,
+    related_metric_id INTEGER REFERENCES health_metrics(id),
+    created_at TEXT DEFAULT (datetime('now'))
+);
+
+-- Audit Log: registro de acciones (seguridad/compliance)
+CREATE TABLE audit_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER,
+    action TEXT NOT NULL,
+    resource TEXT NOT NULL,
+    resource_id INTEGER,
+    details TEXT,             -- JSON con detalles adicionales
+    ip_address TEXT,
+    created_at TEXT DEFAULT (datetime('now'))
+);
+```
+
+## Datos seed realistas
+
+Genera datos seed con:
+- 3 doctores: Dr. Elena Martínez (cardióloga), Dr. James Chen (medicina general), Dr. Sarah Okonkwo (endocrinóloga)
+- 8 pacientes con datos diversos y realistas (distintas edades, géneros, tipos de sangre, alergias)
+- Cada paciente tiene entre 3-8 citas (mezcla de pasadas y futuras, distintos estados)
+- Cada paciente tiene 20-40 métricas de salud de los últimos 6 meses con tendencias realistas:
+  - Paciente 1: presión arterial que va subiendo gradualmente (hipertensión incipiente)
+  - Paciente 2: glucosa estable pero con picos esporádicos
+  - Paciente 3: peso descendente constante (pérdida de peso)
+  - Paciente 4: todos los valores normales y estables
+  - Los demás: variaciones realistas
+- Notificaciones generadas por métricas fuera de rango
+- Entradas en audit log para las últimas acciones
+
+## Rangos normales para métricas
+
+Codifica estos rangos en metrics.service.ts para la detección de anomalías:
+
+| Métrica | Unidad | Normal | Warning | Critical |
+|---------|--------|--------|---------|----------|
+| Presión sistólica | mmHg | 90-120 | 121-140 / <90 | >140 / <80 |
+| Presión diastólica | mmHg | 60-80 | 81-90 / <60 | >90 / <50 |
+| Glucosa (ayunas) | mg/dL | 70-100 | 101-125 / <70 | >125 / <54 |
+| Peso | kg | — | — | — (no genera alertas) |
+| Ritmo cardíaco | bpm | 60-100 | 101-120 / 50-59 | >120 / <50 |
+| Temperatura | °C | 36.1-37.2 | 37.3-38.0 / <36.0 | >38.0 / <35.5 |
+| Saturación O2 | % | 95-100 | 90-94 | <90 |
+
+## Endpoints de la API
+
+### Auth
+- `POST /api/auth/register` — Registrar usuario (body: email, password, name, role)
+- `POST /api/auth/login` — Login, devuelve JWT (body: email, password)
+
+### Patients (requiere auth)
+- `GET /api/patients` — Lista pacientes (doctor ve los suyos, admin ve todos)
+- `GET /api/patients/:id` — Detalle (doctor asignado o el propio paciente)
+- `POST /api/patients` — Crear paciente (solo admin o doctor)
+- `PUT /api/patients/:id` — Actualizar (solo admin o doctor asignado)
+- `DELETE /api/patients/:id` — Soft delete (solo admin)
+
+### Appointments (requiere auth)
+- `GET /api/appointments` — Lista según rol (doctor ve sus citas, paciente las suyas)
+- `GET /api/appointments/:id` — Detalle
+- `POST /api/appointments` — Crear cita (doctor o admin)
+- `PUT /api/appointments/:id` — Actualizar (cambiar estado, añadir notas)
+- `DELETE /api/appointments/:id` — Cancelar
+
+### Health Metrics (requiere auth)
+- `GET /api/health-metrics/:patientId` — Métricas de un paciente (con filtros: type, dateFrom, dateTo)
+- `GET /api/health-metrics/:patientId/summary` — Resumen estadístico (últimas métricas, promedios, tendencias)
+- `POST /api/health-metrics` — Registrar métrica (auto-genera notificación si fuera de rango)
+
+### Notifications (requiere auth)
+- `GET /api/notifications` — Notificaciones del usuario actual
+- `GET /api/notifications/unread-count` — Contador de no leídas
+- `PATCH /api/notifications/:id/read` — Marcar como leída
+
+## Frontend Dashboard (public/index.html)
+
+Crea un dashboard SPA en un solo archivo HTML que use:
+- Tailwind CSS via CDN para estilos
+- Vanilla JavaScript (NO frameworks)
+- Fetch API para llamadas al backend
+- Chart.js via CDN para gráficos de métricas
+
+### Layout del dashboard
+
+El dashboard tiene una barra lateral de navegación y un área de contenido principal:
+
+**1. Pantalla de Login/Register**
+- Formulario de login con email y password
+- Link para cambiar a registro
+- Formulario de registro con email, password, nombre, rol (selector)
+- Después de login exitoso, guarda JWT en localStorage y redirige al dashboard
+- Incluye usuarios pre-cargados para login rápido: botones "Login as Dr. Martínez", "Login as Patient (Carlos Ruiz)", "Login as Admin"
+
+**2. Sidebar (visible post-login)**
+- Logo "HealthTrack" arriba
+- Nombre del usuario logueado y su rol con un badge de color
+- Links de navegación (iconos + texto):
+  - 🏠 Dashboard (resumen)
+  - 👥 Patients (lista)
+  - 📅 Appointments (calendario/lista)
+  - 📊 Health Metrics (gráficos)
+  - 🔔 Notifications (con badge de no leídas)
+- Botón de logout abajo
+- La navegación se adapta al rol: pacientes no ven "Patients" como lista completa
+
+**3. Dashboard Home (vista principal)**
+- Tarjetas de resumen arriba:
+  - Total de pacientes (si doctor/admin)
+  - Citas de hoy
+  - Notificaciones sin leer
+  - Métricas registradas esta semana
+- Lista de "Citas próximas" (5 próximas)
+- Lista de "Alertas recientes" (últimas 5 notificaciones warning/critical)
+- Gráfico pequeño de líneas con las últimas métricas del paciente más activo
+
+**4. Patients View**
+- Tabla con todos los pacientes: nombre, edad, tipo de sangre, doctor asignado, última cita
+- Click en un paciente abre su perfil detallado:
+  - Datos personales
+  - Alergias destacadas en rojo
+  - Historial de citas recientes
+  - Últimas métricas con indicadores de color (verde=normal, amarillo=warning, rojo=critical)
+  - Botón "Record Metric" que abre un modal
+
+**5. Appointments View**
+- Vista de lista cronológica con filtros por estado (scheduled, completed, cancelled)
+- Cada cita muestra: paciente, doctor, fecha/hora, duración, estado con color
+- Botón para crear nueva cita (modal con selección de paciente, doctor, fecha, hora, motivo)
+- Click en una cita muestra detalle + notas del doctor
+
+**6. Health Metrics View**
+- Selector de paciente arriba (dropdown)
+- Selector de tipo de métrica (tabs: Blood Pressure, Glucose, Weight, Heart Rate, Temp, O2)
+- Gráfico de líneas principal (Chart.js) mostrando la tendencia temporal de la métrica seleccionada:
+  - Línea del valor con puntos
+  - Bandas horizontales coloreadas: verde (normal), amarillo (warning), rojo (critical)
+  - Para presión arterial: dos líneas (sistólica y diastólica)
+- Tabla debajo del gráfico con las lecturas individuales: fecha, valor, quién la registró, notas
+- Valores fuera de rango resaltados en amarillo/rojo
+- Estadísticas: promedio, mínimo, máximo, tendencia (subiendo/bajando/estable)
+- Botón "Record New Metric" (modal con tipo, valor, notas)
+
+**7. Notifications View**
+- Lista de notificaciones con iconos de severidad
+- Badge de color: info=azul, warning=amarillo, critical=rojo
+- Click marca como leída
+- Filtros: All, Unread, Critical only
+- Cada notificación muestra: título, mensaje, fecha, severidad, link al paciente/métrica relacionada
+
+### Diseño visual
+
+- Fondo: slate-50, sidebar: white con borde derecho
+- Colores primarios: indigo-600 para acciones, emerald para valores normales, amber para warnings, red para critical
+- Cards con shadow-sm y bordes redondeados
+- Tipografía: font-sans (sistema), headings en semibold
+- Responsive: sidebar se colapsa en móvil a hamburger menu
+- Transiciones suaves al cambiar de sección (fade)
+- El gráfico de Chart.js debe tener tooltips informativos y ser visualmente limpio
+- Tablas con hover en filas y zebra striping sutil
+- Modales con overlay oscuro y animación de entrada
+
+## CLAUDE.md del proyecto
+
+Genera un CLAUDE.md con:
+- Descripción del proyecto
+- Cómo levantar el entorno (npm install, npm run dev, npm test)
+- Estructura de carpetas con descripción de cada módulo
+- Convenciones de código: nombrado de archivos, formato de respuesta API, manejo de errores
+- Rangos normales de métricas de salud
+- Usuarios seed disponibles con contraseñas para testing
+- Nota: "Este proyecto es el proyecto troncal del Módulo 10 del curso de Claude Code. Los alumnos crearán subagentes especializados para trabajar con él."
+
+## Bugs intencionales y deuda técnica
+
+Incluye estos problemas A PROPÓSITO (NO los arregles, los descubrirán los subagentes del curso). Añade un comentario discreto `// DEBT:` o `// FIXME:` en el código para que el instructor pueda localizarlos:
+
+1. **Seguridad**: En patients.service.ts, el endpoint GET /patients/:id no verifica que el doctor que pide sea el asignado al paciente (cualquier doctor ve cualquier paciente)
+2. **Seguridad**: En auth.service.ts, el JWT secret está hardcodeado como string en el código ("healthtrack-secret-key-2024") en vez de usar variable de entorno
+3. **Seguridad**: En error-handler.ts, los errores de base de datos se envían al cliente con el mensaje SQL completo en desarrollo
+4. **Validación**: En metrics.validation.ts, no se valida que secondary_value exista cuando metric_type es "blood_pressure" (la diastólica puede quedar como null)
+5. **Testing**: Los tests existentes solo cubren happy paths, no hay tests para roles no autorizados, inputs malformados, o edge cases de fechas
+6. **Performance**: En metrics.service.ts, la query que obtiene el summary de un paciente hace N+1 queries (una por cada tipo de métrica en vez de agrupar)
+7. **Datos**: En notifications.service.ts, las notificaciones critical no incluyen el valor que disparó la alerta en el mensaje
+8. **API**: El endpoint DELETE /patients/:id hace hard delete en vez de soft delete a pesar de lo que dice la documentación
+
+## Scripts de package.json
+
+```json
+{
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "db:seed": "tsx src/database/seed.ts",
+    "db:reset": "rm -f healthtrack.db && tsx src/database/seed.ts"
+  }
+}
+```
+
+## Configuración
+
+- Puerto: 3000 (configurable via PORT env var)
+- El servidor sirve archivos estáticos desde /public en la raíz
+- JWT expira en 24h
+- Rate limiting: 100 requests por minuto por IP
+- CORS habilitado para localhost
+
+## Al generar el proyecto
+
+1. Inicializa con npm init, instala dependencias, configura TypeScript
+2. Crea todo el esquema de base de datos en migrations.ts
+3. Implementa la API completa con todos los endpoints
+4. Genera los datos seed
+5. Crea el dashboard HTML completo y funcional
+6. Escribe los tests básicos (incompletos a propósito)
+7. Crea CLAUDE.md y README.md
+8. Ejecuta npm run build para verificar que compila
+9. Ejecuta npm run db:seed para popular la base de datos
+10. Ejecuta npm test para verificar que los tests básicos pasan
+11. Levanta el servidor con npm run dev y confirma que responde
+
+El resultado debe ser un proyecto que el alumno pueda clonar, hacer npm install && npm run dev, abrir http://localhost:3000 y ver el dashboard completo funcionando con datos realistas.
