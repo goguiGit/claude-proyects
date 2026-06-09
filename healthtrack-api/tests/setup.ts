@@ -15,9 +15,10 @@ beforeAll(() => {
 });
 
 beforeEach(() => {
-  // Limpiar datos entre tests
+  // Limpiar datos entre tests (orden respeta FK constraints)
   testDb.exec(`
     DELETE FROM audit_log;
+    DELETE FROM alerts;
     DELETE FROM notifications;
     DELETE FROM health_metrics;
     DELETE FROM appointments;

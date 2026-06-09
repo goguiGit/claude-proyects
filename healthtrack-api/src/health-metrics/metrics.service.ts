@@ -1,6 +1,7 @@
 import { getDb } from '../database/connection';
 import type { HealthMetric, CreateMetricDTO, MetricSummary, MetricType, MetricRange } from './metrics.types';
 import { createNotification } from '../notifications/notifications.service';
+import { createAlert, computeAlertSeverity } from '../alerts/alerts.service';
 
 // Rangos normales de métricas de salud
 const METRIC_RANGES: Partial<Record<MetricType, MetricRange>> = {
@@ -151,21 +152,26 @@ export function createMetric(dto: CreateMetricDTO, recordedByUserId: number): He
     WHERE hm.id = ?
   `).get(metricId) as HealthMetric;
 
-  // Generar notificación automática si hay anomalía
-  const status = checkMetricStatus(dto.metric_type, dto.value);
-  if (status === 'warning' || status === 'critical') {
-    const metricLabel = dto.metric_type.replace(/_/g, ' ');
-    const severityLabel = status === 'critical' ? 'crítico' : 'advertencia';
+  // Generar alerta y notificación si hay anomalía
+  const alertSeverity = computeAlertSeverity(dto.metric_type, dto.value, dto.secondary_value);
+  if (alertSeverity) {
+    createAlert({
+      patient_id: dto.patient_id,
+      metric_id: metricId,
+      metric_type: dto.metric_type,
+      value: dto.value,
+      secondary_value: dto.secondary_value ?? null,
+      severity: alertSeverity,
+    });
 
-    // DEBT: El mensaje de notificación no incluye el valor que disparó la alerta,
-    // solo describe el tipo. Debería decir "Glucosa: 145 mg/dL (crítico)" en vez de
-    // solo "Nivel de glucosa fuera de rango".
+    const metricLabel = dto.metric_type.replace(/_/g, ' ');
+    const severityLabel = alertSeverity === 'critical' ? 'crítico' : 'advertencia';
     createNotification({
       patient_id: dto.patient_id,
-      type: status === 'critical' ? 'metric_critical' : 'metric_warning',
+      type: alertSeverity === 'critical' ? 'metric_critical' : 'metric_warning',
       title: `${metricLabel} ${severityLabel}`,
       message: `Nivel de ${metricLabel} fuera de rango normal`,
-      severity: status,
+      severity: alertSeverity,
       related_metric_id: metricId,
     });
   }

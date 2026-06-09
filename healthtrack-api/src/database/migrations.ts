@@ -61,6 +61,18 @@ export function runMigrations(db: Database.Database): void {
       created_at TEXT DEFAULT (datetime('now'))
     );
 
+    CREATE TABLE IF NOT EXISTS alerts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      patient_id INTEGER NOT NULL REFERENCES patients(id) ON DELETE CASCADE,
+      metric_id INTEGER NOT NULL REFERENCES health_metrics(id) ON DELETE CASCADE,
+      metric_type TEXT NOT NULL,
+      value REAL NOT NULL,
+      secondary_value REAL,
+      severity TEXT NOT NULL CHECK(severity IN ('warning', 'critical')),
+      acknowledged INTEGER DEFAULT 0,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+
     CREATE TABLE IF NOT EXISTS audit_log (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id INTEGER,
