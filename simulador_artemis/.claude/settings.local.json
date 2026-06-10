@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run:*)",
+      "Bash(curl -s http://localhost:3000/api/trajectory)",
+      "Bash(curl -s http://localhost:3000/api/events)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(f'Events: {len\\(d\\)}, first: {d[0][\\\\\"title\\\\\"]}'\\)\")",
+      "Bash(curl -s http://localhost:3000/api/crew)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('Crew:', [m['name'] for m in d]\\)\")",
+      "Bash(curl -s http://localhost:3000/api/telemetry/current)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('Telemetry:', d['phase'], d['metFormatted']\\)\")",
+      "Bash(node -e \"const d=require\\('fs'\\).readFileSync\\('/dev/stdin','utf8'\\);const arr=JSON.parse\\(d\\);console.log\\('Events:',arr.length,'| First:',arr[0].title,'| Last:',arr[arr.length-1].title\\)\")",
+      "Bash(node -e \"const d=require\\('fs'\\).readFileSync\\('/dev/stdin','utf8'\\);const arr=JSON.parse\\(d\\);console.log\\('Crew:',arr.map\\(m=>m.name\\).join\\(', '\\)\\)\")",
+      "Bash(curl -s \"http://localhost:3000/api/telemetry/7020\")",
+      "Bash(node -e \"const d=require\\('fs'\\).readFileSync\\('/dev/stdin','utf8'\\);const p=JSON.parse\\(d\\);console.log\\('TLI telemetry | Phase:',p.phase,'| Velocity:',p.velocity,'km/h | Dist Earth:',Math.round\\(p.dist_earth*1000\\),'km'\\)\")",
+      "Bash(curl -s \"http://localhost:3000\")",
+      "mcp__playwright__browser_take_screenshot",
+      "mcp__playwright__browser_snapshot"
+    ]
+  }
+}

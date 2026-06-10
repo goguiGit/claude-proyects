@@ -1,0 +1,144 @@
+Genera "Artemis II Mission Tracker" — un simulador 3D interactivo de la misión Artemis II de la NASA (lanzada el 1 de abril de 2026).
+
+## Stack
+- Node.js + TypeScript (backend)
+- Express (servidor + API)
+- Three.js (rendering 3D, importado como ES module via CDN en el HTML)
+- Chart.js (gráficos de telemetría, CDN)
+- Vanilla JS + CSS (no frameworks frontend)
+- Vitest (tests)
+
+## Lo que debe verse al abrir http://localhost:3000
+
+Un simulador espacial 3D con:
+
+### Escena 3D (Three.js)
+- **Fondo de estrellas**: Skybox o partículas de estrellas
+- **Tierra**: Esfera con textura realista (usar textura procedural con colores azul/verde/blanco si no hay imagen disponible, o incluir URL de textura NASA en README). Rotación lenta. Atmósfera glow con shader Fresnel (anillo azul semi-transparente)
+- **Luna**: Esfera gris con textura procedural (cráteres como bumps). Posicionada a escala real relativa (384 unidades, donde 1 unidad = 1000 km). Órbita la Tierra lentamente
+- **Sol**: Luz direccional + esfera muy lejana amarilla (solo para referencia visual)
+- **Nave Orion**: Un pequeño modelo (puede ser un cono + cilindro + paneles solares con geometría básica). Marcador brillante para visibilidad. Exagerada 500x en tamaño
+- **Trayectoria**: Línea curva 3D mostrando toda la ruta figure-8 de retorno libre. La parte recorrida en verde sólido, la futura en verde transparente, el segmento actual en naranja
+- **OrbitControls**: Arrastrar para rotar, scroll para zoom, click derecho para pan
+
+### HUD (Heads-Up Display)
+Overlay en esquina superior izquierda con font monospace verde (#00ff88):
+- MET (Mission Elapsed Time): `T+ DDD:HH:MM:SS`
+- Distance from Earth: `XXX,XXX km`
+- Distance from Moon: `XXX,XXX km`
+- Velocity: `XX,XXX km/h`
+- Current phase: `LUNAR FLYBY` (etc.)
+
+### Timeline (barra inferior)
+- Slider horizontal que va del T+0 (lanzamiento) al T+10d (splashdown)
+- Botones: ⏪ ⏸️/▶️ ⏩
+- Selector de velocidad: 1x, 10x, 100x, 1000x
+- Marcadores en el slider para cada evento importante
+- El tiempo del slider controla la posición de Orion en la trayectoria
+
+### Panel de eventos (sidebar derecho, colapsable)
+- Lista vertical de eventos de misión
+- El evento actual/más cercano resaltado en verde
+- Click en evento salta al momento en la timeline
+- Cada evento: icono + título + MET + descripción corta
+
+### Botones de cámara (esquina superior derecha)
+- 🌍 "Earth View" — Cámara mirando la Tierra con Orion a lo lejos
+- 🌑 "Moon View" — Cámara cerca de la Luna
+- 🚀 "Follow Orion" — Cámara siguiendo a la nave
+- 🔭 "Overview" — Zoom out mostrando todo el sistema
+- 🌅 "Earthrise" — Ángulo replicando la foto de Earthrise del flyby
+
+### Info de tripulación
+Al hacer hover/click sobre la nave: tooltip con los 4 astronautas:
+- Reid Wiseman (Commander)
+- Victor Glover (Pilot)
+- Christina Koch (Mission Specialist)
+- Jeremy Hansen (Mission Specialist, CSA)
+
+## Datos de la misión Artemis II (reales)
+
+### Timeline de eventos
+```
+MET 000:00:00:00 — Launch (April 1, 2026, 6:35 PM EDT from KSC)
+MET 000:00:02:00 — SRB Separation
+MET 000:00:08:30 — Core Stage Separation
+MET 000:00:18:00 — Perigee Raise Maneuver
+MET 000:01:57:00 — Trans-Lunar Injection (TLI) burn
+MET 000:04:00:00 — Service Module Panel Jettison
+MET 002:00:00:00 — Outbound Coast begins (crew sleep/wake cycles)
+MET 003:12:00:00 — Mid-course Correction Burn 1
+MET 004:18:37:00 — Lunar Sphere of Influence Entry (Moon's gravity dominant)
+MET 005:07:56:00 — Distance Record (surpassing Apollo 13's 248,655 miles / 400,171 km)
+MET 005:12:45:00 — Lunar Observation Period begins
+MET 005:19:02:00 — Closest Approach (~6,545 km above lunar surface)
+MET 005:19:07:00 — Maximum Distance from Earth (406,732 km / 252,756 miles)
+MET 005:18:44:00 — Loss of Signal (behind Moon, ~40 min blackout)
+MET 005:19:25:00 — Acquisition of Signal + Earthrise
+MET 005:20:35:00 — Solar Eclipse from Orion (~1 hour)
+MET 005:21:35:00 — Lunar Observation Period ends, return begins
+MET 006:13:25:00 — Exit Lunar Sphere of Influence
+MET 007:12:00:00 — Mid-course Correction Burn 2
+MET 009:06:00:00 — Service Module Separation
+MET 009:06:30:00 — Reentry Interface (122 km altitude, ~40,000 km/h)
+MET 009:06:45:00 — Peak Heating (2,760°C on heat shield)
+MET 009:07:00:00 — Drogue Chute Deploy
+MET 009:07:05:00 — Main Chute Deploy
+MET 009:07:10:00 — Splashdown (Pacific Ocean, off San Diego)
+```
+
+### Trayectoria (simplificada pero realista)
+Genera una trayectoria figure-8 de retorno libre con estos waypoints clave (posiciones en unidades donde 1 = 1000 km, Tierra en origen):
+- T+0: En superficie de Tierra (posición de KSC, 6.371 unidades del centro)
+- T+2h (post-TLI): En órbita ~300km, acelerando
+- T+1d a T+4d: Trayecto rectilíneo-ish hacia la Luna, curvándose por gravedad
+- T+5d 19h: Paso por detrás de la Luna a 6.5 unidades de la superficie lunar
+- T+6d a T+9d: Retorno curvo hacia la Tierra
+- T+9d 7h: Reentry en atmósfera terrestre
+
+La trayectoria debe tener al menos 500 puntos interpolados para una curva suave. Usa una hélice/parábola simplificada que se vea como un figure-8 alrededor de Tierra y Luna. No necesita ser 100% precisa orbitalmente, pero debe verse convincente.
+
+### Telemetría simulada
+Para cada punto de la trayectoria, calcula:
+- Distancia a la Tierra (vector desde origen)
+- Distancia a la Luna (vector desde posición lunar)
+- Velocidad (derivada de la posición, km/h)
+- Fase de la misión (basada en MET)
+
+## API endpoints
+- `GET /api/trajectory` — Array de puntos [{met, x, y, z, dist_earth, dist_moon, velocity, phase}]
+- `GET /api/events` — Array de eventos [{id, title, met, description, phase}]
+- `GET /api/events/upcoming` — Próximos 3 eventos desde el MET actual simulado
+- `GET /api/telemetry/current` — Telemetría del punto actual simulado
+- `GET /api/telemetry/:met` — Telemetría en un MET específico
+- `GET /api/crew` — Info de la tripulación
+
+## Diseño visual
+- Fondo: negro espacio (#0a0a0f)
+- HUD: verde terminal (#00ff88), font monospace
+- Panel de eventos: fondo semi-transparente (#111827cc), borde #1e3a5f
+- Botones de cámara: glass effect (backdrop-filter: blur)
+- Timeline: barra oscura con gradiente, marcadores brillantes
+- Todo el UI overlay tiene z-index alto sobre el canvas de Three.js
+- Responsive: en móvil el panel de eventos se colapsa, el HUD se reduce
+
+## CLAUDE.md
+Incluir: descripción del proyecto y su conexión con Artemis II, setup (npm install, npm run dev), estructura, convenciones 3D (coordenadas, escala, colores), datos de la misión, cómo añadir eventos, usuarios pueden contribuir datos reales cuando NASA los publique.
+
+## Tests
+- orbital-math.test.ts: Tests de interpolación, cálculo de distancias, conversión MET
+- trajectory.test.ts: Tests de que la trayectoria tiene los puntos clave, distancias razonables
+
+## Scripts
+```json
+{
+  "dev": "tsx watch src/server.ts",
+  "build": "tsc",
+  "test": "vitest run",
+  "start": "node dist/server.js"
+}
+```
+
+Puerto 3000 por defecto. El servidor sirve archivos estáticos desde /public.
+
+Al terminar: npm run build, npm test, npm run dev, y confirma que http://localhost:3000 muestra el tracker 3D completo funcionando.

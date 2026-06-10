@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Artemis II Seguimiento de Misión — NASA</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+
+  <!-- El canvas de Three.js ocupa el fondo -->
+  <canvas id="space-canvas"></canvas>
+
+  <!-- HUD: esquina superior izquierda -->
+  <div id="hud">
+    <div class="hud-title">ARTEMIS II</div>
+    <div class="hud-row"><span class="hud-label">TEM</span><span id="hud-met" class="hud-value">T+ 000:00:00:00</span></div>
+    <div class="hud-row"><span class="hud-label">DIST TIERRA</span><span id="hud-dist-earth" class="hud-value">6.371 km</span></div>
+    <div class="hud-row"><span class="hud-label">DIST LUNA</span><span id="hud-dist-moon" class="hud-value">384.400 km</span></div>
+    <div class="hud-row"><span class="hud-label">VELOCIDAD</span><span id="hud-velocity" class="hud-value">0 km/h</span></div>
+    <div class="hud-row"><span class="hud-label">FASE</span><span id="hud-phase" class="hud-value">LANZAMIENTO</span></div>
+  </div>
+
+  <!-- Panel de información / ayuda -->
+  <div id="info-panel">
+    <div id="info-header">
+      <span>GUÍA DEL SIMULADOR</span>
+      <button id="info-close" title="Cerrar">✕</button>
+    </div>
+    <div id="info-body">
+      <p class="info-intro">
+        Simulador 3D interactivo de la misión <strong>Artemis II</strong> de la NASA,
+        lanzada el 1 de abril de 2026. Cuatro astronautas realizan el primer viaje
+        tripulado a distancia lunar desde el Apollo 17 mediante una trayectoria de
+        retorno libre en figura de 8.
+      </p>
+
+      <div class="info-section">
+        <div class="info-section-title">ESCENA 3D</div>
+        <div class="info-legend">
+          <span class="legend-dot" style="background:#1a4f8a;border:1px solid #4488ff"></span>
+          <span>Tierra — textura procedural, atmósfera Fresnel</span>
+        </div>
+        <div class="info-legend">
+          <span class="legend-dot" style="background:#888"></span>
+          <span>Luna — órbita visual cada 27,3 días</span>
+        </div>
+        <div class="info-legend">
+          <span class="legend-dot" style="background:#ff8800"></span>
+          <span>Orion — posición actual de la nave (×500 tamaño real)</span>
+        </div>
+        <div class="info-legend">
+          <span class="legend-line" style="background:#00ff88"></span>
+          <span>Trayectoria recorrida</span>
+        </div>
+        <div class="info-legend">
+          <span class="legend-line" style="background:rgba(0,255,136,0.2)"></span>
+          <span>Trayectoria futura</span>
+        </div>
+        <div class="info-legend">
+          <span class="legend-line" style="background:#ff8800"></span>
+          <span>Segmento actual</span>
+        </div>
+      </div>
+
+      <div class="info-section">
+        <div class="info-section-title">CONTROLES DE CÁMARA</div>
+        <div class="info-control"><kbd>Arrastrar</kbd><span>Rotar la escena</span></div>
+        <div class="info-control"><kbd>Rueda</kbd><span>Zoom acercar / alejar</span></div>
+        <div class="info-control"><kbd>Botón der.</kbd><span>Desplazar (pan)</span></div>
+        <div class="info-control"><kbd>🚀 Orion</kbd><span>Click sobre la nave → tripulación</span></div>
+      </div>
+
+      <div class="info-section">
+        <div class="info-section-title">LÍNEA DE TIEMPO</div>
+        <div class="info-control"><kbd>▶️</kbd><span>Reproducir / pausar simulación</span></div>
+        <div class="info-control"><kbd>⏪ ⏩</kbd><span>Saltar ±12 horas</span></div>
+        <div class="info-control"><kbd>1×–1000×</kbd><span>Velocidad de reproducción</span></div>
+        <div class="info-control"><kbd>● Marcador</kbd><span>Click en evento → saltar al momento</span></div>
+      </div>
+
+      <p class="info-note">
+        Escala: 1 unidad = 1.000 km · Distancia Tierra-Luna: 384.400 km ·
+        Duración total: 9 días, 7 h, 10 min
+      </p>
+    </div>
+  </div>
+
+  <!-- Botón para reabrir el panel de información -->
+  <button id="info-open-btn" title="Mostrar guía del simulador">?</button>
+
+  <!-- Controles de cámara: esquina superior derecha -->
+  <div id="camera-controls">
+    <button class="cam-btn" data-cam="earth" title="Vista Tierra">🌍</button>
+    <button class="cam-btn" data-cam="moon" title="Vista Luna">🌑</button>
+    <button class="cam-btn" data-cam="follow" title="Seguir Orion">🚀</button>
+    <button class="cam-btn" data-cam="overview" title="Visión General">🔭</button>
+    <button class="cam-btn" data-cam="earthrise" title="Amanecer Terrestre">🌅</button>
+  </div>
+
+  <!-- Panel de eventos: lateral derecho, plegable -->
+  <div id="events-panel">
+    <div id="events-header">
+      <span>EVENTOS DE MISIÓN</span>
+      <button id="events-toggle" title="Plegar panel">◀</button>
+    </div>
+    <div id="events-list"></div>
+  </div>
+
+  <!-- Pestaña para reabrir el panel de eventos (visible solo cuando está plegado) -->
+  <button id="events-reopen-tab" title="Mostrar eventos de misión">
+    EVENTOS<br>▶
+  </button>
+
+  <!-- Tooltip de tripulación -->
+  <div id="crew-tooltip">
+    <div class="crew-title">TRIPULACIÓN — ORION</div>
+    <div id="crew-list"></div>
+  </div>
+
+  <!-- Línea de tiempo: barra inferior -->
+  <div id="timeline-bar">
+    <div id="timeline-events-markers"></div>
+    <div id="timeline-track">
+      <input type="range" id="timeline-slider" min="0" max="803400" value="0" step="100">
+    </div>
+    <div id="timeline-controls">
+      <button id="btn-rewind" title="Retroceder">⏪</button>
+      <button id="btn-playpause" title="Reproducir / Pausar">▶️</button>
+      <button id="btn-forward" title="Avanzar">⏩</button>
+      <select id="speed-select" title="Velocidad de reproducción">
+        <option value="1">1×</option>
+        <option value="10">10×</option>
+        <option value="100" selected>100×</option>
+        <option value="1000">1000×</option>
+      </select>
+      <span id="timeline-met-display" class="timeline-met">T+ 000:00:00:00</span>
+    </div>
+  </div>
+
+  <!-- Three.js + OrbitControls via CDN -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+
+  <!-- Chart.js via CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <!-- Módulos de la aplicación -->
+  <script type="module" src="/js/app.js"></script>
+
+</body>
+</html>
