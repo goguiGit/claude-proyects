@@ -1,122 +1,237 @@
-# Campos de configuración de una Skill en Claude Code
+# Skills en Claude Code — Guía de referencia
 
-Cuando creas una skill personalizada en Claude Code, no estás definiendo un worker con su propio cerebro como harías con un subagente, sino empaquetando un conjunto de instrucciones, herramientas y condiciones de activación que Claude puede cargar sobre la marcha, dentro de su propia sesión, cuando detecta que son útiles.
+Una skill no es un agente con cerebro propio. Es una capacidad empaquetada que Claude carga en su propia sesión cuando la necesita: instrucciones, herramientas pre-aprobadas y condiciones de activación. La diferencia con un subagente no es de grado sino de naturaleza.
 
-Esa diferencia cambia todo lo que importa al diseñar una skill. Aquí la decisión clave no es qué herramientas le das a un agente independiente, sino cuándo debe Claude traerse esa capacidad al contexto, con qué argumentos, con qué permisos y en qué tipo de archivos.
+> **Subagente** → alguien a quien delegar.  
+> **Skill** → algo que sabes hacer cuando toca.
 
 ---
 
-## El esqueleto de una skill
+## Dónde viven los archivos
 
-Una skill se define en un archivo Markdown con esta estructura:
+```
+.claude/
+└── skills/
+    ├── mi-skill.md          # skill de proyecto (solo este repo)
+    └── otro-skill.md
 
-```yaml
----
-name: mi-skill                    # ID para /mi-skill
-description: >                    # Claude usa esto para decidir cuándo cargarlo
-  Qué hace. Max 250 chars visibles.
-argument-hint: "[param]"          # Hint en autocompletado
-disable-model-invocation: true    # Solo tú, no Claude automáticamente
-user-invocable: false             # Solo Claude, no aparece en /
-allowed-tools: Read Bash(git *)   # Pre-aprobados sin prompt
-model: sonnet                     # Modelo cuando está activo
-effort: high                      # low | medium | high | max
-context: fork                     # Ejecutar en subagente aislado
-agent: Explore                    # Subagente para context: fork
-hooks: { ... }                    # Hooks scoped a este skill
-paths: "src/**/*.js"              # Solo activar con estos archivos
----
+~/.claude/
+└── skills/
+    └── global-skill.md      # skill global (todos los proyectos)
 ```
 
-Variables disponibles en el cuerpo:
+---
 
-- `$ARGUMENTS` — todo lo escrito tras `/nombre`
-- `$0`, `$1`, `$2` — argumentos posicionales
-- `${CLAUDE_SKILL_DIR}` — directorio del skill
-- `${CLAUDE_SESSION_ID}` — id de sesión
+## Esqueleto completo
 
-A primera vista el archivo se parece al de un subagente: bloque YAML arriba, Markdown abajo. Pero si te fijas en los campos, casi ninguno coincide con los de un subagente, y esa es precisamente la pista. Los campos de una skill están pensados para responder a preguntas distintas: no "¿cómo se comporta este trabajador?", sino "¿cuándo entra en juego esta capacidad y con qué parámetros?".
+```markdown
+---
+name: mi-skill
+description: >
+  Qué hace esta skill. Claude lee esto para decidir si cargarla.
+  Máx. ~250 caracteres visibles. Sé específico.
+argument-hint: "<archivo> [--flag]"
+disable-model-invocation: false
+user-invocable: true
+allowed-tools: Read Bash(git *) Glob
+model: sonnet
+effort: high
+context: fork
+agent: Explore
+paths: "src/**/*.ts"
+hooks:
+  PreToolUse:
+    - matcher: Bash
+      hooks:
+        - type: command
+          command: echo "antes de cada Bash"
+---
+
+Instrucciones en Markdown normal.
+
+Recibe estos valores en tiempo de ejecución:
+- $ARGUMENTS   → todo lo escrito tras /mi-skill
+- $0, $1, $2   → argumentos posicionales
+- ${CLAUDE_SKILL_DIR}   → directorio de este archivo .md
+- ${CLAUDE_SESSION_ID}  → id de la sesión activa
+```
 
 ---
 
-## Invocación: automática, manual o ambas
+## Campos campo a campo
 
-La primera característica diferencial de una skill es que puede activarse de dos formas distintas, y tú decides cuáles permites.
+### `name`
+Identificador del comando slash. `/mi-skill` invoca la skill con `name: mi-skill`.  
+Solo letras, números y guiones. Sin espacios.
 
-Por un lado, Claude puede cargarla automáticamente cuando considere que encaja con la tarea. Para que esto funcione bien, la `description` no es decorativa: es exactamente el texto que Claude lee para decidir si merece la pena traerse la skill al contexto. Una descripción vaga hace que la skill nunca se active; una demasiado genérica hace que se active en situaciones donde no aporta nada.
+### `description`
+El texto que Claude lee para decidir si activar la skill automáticamente.  
+- **Vago** → nunca se activa sola.  
+- **Genérico** → se activa cuando no hace falta.  
+- **Preciso** → se activa exactamente cuando corresponde.
 
-Por otro lado, el usuario puede invocarla manualmente como un comando slash, del estilo `/mi-skill`, usando el `name` como identificador. Aquí entran los dos campos clave:
+```yaml
+# Malo
+description: Ayuda con código
 
-- **`disable-model-invocation`** — impide que Claude la active por su cuenta. La skill queda reservada para invocación explícita del usuario.
-- **`user-invocable`** — decide si aparece en el menú de comandos slash. Con `false`, la skill existe pero solo Claude puede activarla automáticamente.
+# Bueno
+description: >
+  Revisa PRs abiertos en GitHub, lista los cambios por archivo
+  y genera un resumen de impacto. Úsalo antes de hacer merge.
+```
 
-Combinando estos dos campos obtienes cuatro comportamientos:
+### `argument-hint`
+Texto que aparece en el autocompletado del slash command. No afecta la ejecución.
 
-| `disable-model-invocation` | `user-invocable` | Resultado |
+```yaml
+argument-hint: "<rama> [--only-failing]"
+```
+
+### `disable-model-invocation`
+| Valor | Efecto |
+|---|---|
+| `false` (por defecto) | Claude puede cargarla automáticamente |
+| `true` | Solo se activa si el usuario la invoca con `/` |
+
+Úsalo cuando la skill hace algo destructivo o costoso que no debe ejecutarse sin intención explícita.
+
+### `user-invocable`
+| Valor | Efecto |
+|---|---|
+| `true` (por defecto) | Aparece en el menú de slash commands |
+| `false` | No aparece; solo Claude puede activarla automáticamente |
+
+### Combinaciones de invocación
+
+| `disable-model-invocation` | `user-invocable` | Quién puede activarla |
 |---|---|---|
-| `false` | `true` | Ambos pueden activarla (por defecto) |
+| `false` | `true` | Cualquiera (por defecto) |
 | `true` | `true` | Solo el usuario, vía `/` |
-| `false` | `false` | Solo Claude automáticamente |
-| `true` | `false` | Inaccesible en la práctica |
+| `false` | `false` | Solo Claude, automáticamente |
+| `true` | `false` | Nadie (inutilizable) |
+
+### `allowed-tools`
+Herramientas pre-aprobadas durante la ejecución de la skill. El usuario no ve prompts de confirmación para estas herramientas mientras la skill está activa.
+
+```yaml
+# Solo lectura, sin preguntar
+allowed-tools: Read Glob Grep
+
+# Lectura + comandos git específicos
+allowed-tools: Read Bash(git log) Bash(git diff)
+
+# Todo bash (peligroso, solo si sabes lo que haces)
+allowed-tools: Bash
+```
+
+Es un **contrato de confianza puntual**: los permisos solo aplican durante la ejecución de la skill, no de forma permanente.
+
+### `model`
+Modelo que ejecuta esta skill cuando está activa.
+
+```yaml
+model: haiku     # rápido y barato, para tareas simples
+model: sonnet    # equilibrado (por defecto del proyecto)
+model: opus      # máxima capacidad, para análisis complejos
+```
+
+### `effort`
+Nivel de esfuerzo de razonamiento. Afecta la profundidad del análisis.
+
+```yaml
+effort: low      # respuesta rápida, contexto mínimo
+effort: medium
+effort: high     # análisis profundo
+effort: max      # sin restricciones, máximo tokens de pensamiento
+```
+
+### `context`
+```yaml
+context: fork
+```
+Ejecuta la skill en un subagente aislado. El resultado vuelve al hilo principal sin contaminar el contexto de la conversación. Útil para exploración o tareas con mucho output.
+
+### `agent`
+Solo válido con `context: fork`. Especifica qué tipo de subagente usar.
+
+```yaml
+context: fork
+agent: Explore    # subagente especializado en búsqueda de código
+```
+
+### `paths`
+Activa la skill solo cuando el archivo activo coincide con el patrón glob.
+
+```yaml
+paths: "src/**/*.ts"        # solo archivos TypeScript en src/
+paths: "**/*.test.*"        # solo archivos de test
+paths: "**"                 # cualquier archivo (comportamiento por defecto)
+```
+
+Permite tener decenas de skills sin saturar el contexto: solo entran las relevantes para lo que estás editando.
+
+### `hooks`
+Hooks del ciclo de vida con scope local a la skill. Solo se disparan mientras la skill está activa, no afectan el resto del proyecto.
+
+```yaml
+hooks:
+  PreToolUse:
+    - matcher: Bash
+      hooks:
+        - type: command
+          command: echo "ejecutando bash dentro de la skill"
+```
 
 ---
 
-## Activación condicional por archivos
+## Variables en el cuerpo
 
-Con `paths` puedes indicar que una skill solo sea relevante cuando se están editando ciertos archivos, por ejemplo `src/**/*.js`. Esto significa que una misma instalación puede tener decenas de skills definidas sin saturar el razonamiento del modelo: solo las relevantes para el archivo actual entran en juego.
+```markdown
+# El usuario escribió: /revisar-pr main --verbose
 
-Es una forma de mantener el contexto limpio que los subagentes no ofrecen de forma nativa. La skill deja de ser "una capacidad siempre disponible" y pasa a ser "una capacidad que aparece cuando hace falta".
-
----
-
-## Argumentos y variables dinámicas
-
-A diferencia de un subagente, que recibe una instrucción conversacional, una skill puede diseñarse como un comando parametrizado:
-
-- `$ARGUMENTS` contiene todo lo que el usuario escribió después de `/nombre`.
-- `$0`, `$1`, etc. son los argumentos posicionales.
-- `${CLAUDE_SKILL_DIR}` apunta al directorio donde vive la skill, útil para referenciar archivos de soporte o plantillas que viajan junto a ella.
-- `${CLAUDE_SESSION_ID}` identifica la sesión actual, útil para logs o estados persistentes.
-
-`argument-hint` muestra en el autocompletado qué parámetros espera la skill, convirtiéndola en una herramienta autodocumentada. Este diseño acerca las skills a comandos CLI reutilizables más que a prompts sueltos.
+$ARGUMENTS          → "main --verbose"
+$0                  → "main"
+$1                  → "--verbose"
+${CLAUDE_SKILL_DIR} → /ruta/a/.claude/skills
+${CLAUDE_SESSION_ID}→ abc123xyz
+```
 
 ---
 
-## Herramientas pre-aprobadas
+## Ejemplo real: skill de revisión de PR
 
-El campo `allowed-tools` no solo restringe qué puede usar la skill, sino que además pre-aprueba esas herramientas para que no pidan confirmación al usuario mientras la skill está activa.
+```markdown
+---
+name: revisar-pr
+description: >
+  Revisa el diff del PR actual contra main. Lista cambios por archivo,
+  detecta patrones problemáticos y sugiere mejoras. Invócalo antes de
+  hacer merge o pedir review.
+argument-hint: "[rama-base]"
+allowed-tools: Read Bash(git *) Glob Grep
+effort: high
+---
 
-Es una diferencia sutil pero importante respecto a los subagentes: en una skill, la lista de herramientas actúa como un **contrato de confianza puntual**, válido solo mientras esa skill ejecuta. Especialmente útil en skills de trabajo rutinario con `Bash(git *)` o `Read`, donde pedir permiso en cada paso sería ruido puro.
+Revisa el diff entre la rama actual y $0 (o `main` si no se especifica).
+
+1. Ejecuta `git diff $0...HEAD --stat` para ver los archivos cambiados.
+2. Para cada archivo modificado, lee el diff completo.
+3. Detecta: código duplicado, dependencias nuevas sin justificar,
+   tests eliminados, secretos hardcodeados, cambios de comportamiento
+   no documentados.
+4. Devuelve un resumen estructurado: archivos → hallazgos → veredicto.
+```
 
 ---
 
-## Aislamiento del contexto
+## Skills vs Subagentes — cuándo usar cada uno
 
-Las skills pueden ejecutarse en el mismo hilo que Claude o en un subagente separado. Con `context: fork`, Claude lanza la skill en un contexto aislado, opcionalmente delegando en un subagente concreto mediante `agent` (por ejemplo, `agent: Explore`).
-
-Esta combinación convierte a las skills en una herramienta de composición real: la skill aporta la definición de la tarea y sus condiciones, y el subagente aporta el entorno aislado para ejecutarla. El resultado regresa al hilo principal sin contaminarlo.
-
----
-
-## Hooks locales a la skill
-
-Las skills admiten hooks del ciclo de vida, pero limitados al alcance de la skill: solo se disparan mientras esa skill está activa. Esto permite encadenar acciones específicas —validaciones, formateos, notificaciones— sin ensuciar la configuración global del proyecto.
-
----
-
-## Configuración propia de modelo y esfuerzo
-
-Las skills pueden declarar el modelo que las ejecuta (`model`) y un nivel de esfuerzo (`effort: low | medium | high | max`). La decisión es **por tarea**, no por worker. Una misma conversación puede invocar varias skills con configuraciones distintas, cada una optimizada para lo que hace:
-
-- Una skill de lectura rápida → `effort: low`
-- Una skill de refactor complejo → `effort: high` o `max`
-
----
-
-## La clave conceptual: capacidad activable, no worker
-
-La mejor forma de entender una skill es pensarla como una capacidad que Claude incorpora a su toolkit de manera temporal y condicionada. No es un agente aparte con memoria y personalidad; es un bloque de instrucciones, herramientas pre-aprobadas y variables dinámicas que se activa por nombre, por contexto o por decisión del modelo, y que desaparece cuando ya no hace falta.
-
-> Un subagente es "alguien a quien delegar". Una skill es "algo que sabes hacer cuando toca".
-
-Todas las características vistas —la doble vía de invocación, la activación por rutas, los argumentos dinámicos, los hooks locales, el contexto forkeable— están pensadas para reforzar esa idea.
+| Necesitas... | Usa |
+|---|---|
+| Reutilizar una secuencia de pasos como comando | **Skill** |
+| Ejecutar trabajo en paralelo sin bloquear el hilo | **Subagente** |
+| Pre-aprobar herramientas para una tarea específica | **Skill** |
+| Aislar trabajo con memoria y estado propios | **Subagente** |
+| Activar capacidades según el archivo que editas | **Skill** |
+| Delegar una tarea completa y esperar el resultado | **Subagente** |
+| Parametrizar una tarea como CLI (`/cmd arg1 arg2`) | **Skill** |
