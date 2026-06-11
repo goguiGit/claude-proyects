@@ -169,9 +169,21 @@ function createEarth() {
   const earth = new THREE.Mesh(geo, mat);
   scene.add(earth);
 
-  // Atmosphere glow (Fresnel-like)
-  const atmGeo = new THREE.SphereGeometry(EARTH_R * 1.06, 64, 64);
-  const atmMat = new THREE.MeshPhongMaterial({
+  // Troposphere — innermost warm haze
+  const tropoGeo = new THREE.SphereGeometry(EARTH_R * 1.02, 64, 64);
+  const tropoMat = new THREE.MeshBasicMaterial({
+    color: 0x88aaff,
+    transparent: true,
+    opacity: 0.08,
+    side: THREE.FrontSide,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  });
+  scene.add(new THREE.Mesh(tropoGeo, tropoMat));
+
+  // Stratosphere — main blue glow
+  const stratGeo = new THREE.SphereGeometry(EARTH_R * 1.06, 64, 64);
+  const stratMat = new THREE.MeshBasicMaterial({
     color: 0x4488ff,
     transparent: true,
     opacity: 0.15,
@@ -179,12 +191,11 @@ function createEarth() {
     blending: THREE.AdditiveBlending,
     depthWrite: false,
   });
-  const atmosphere = new THREE.Mesh(atmGeo, atmMat);
-  scene.add(atmosphere);
+  scene.add(new THREE.Mesh(stratGeo, stratMat));
 
-  // Atmosphere outer rim
-  const rimGeo = new THREE.SphereGeometry(EARTH_R * 1.12, 64, 64);
-  const rimMat = new THREE.MeshPhongMaterial({
+  // Mesosphere — outer rim backlit
+  const mesoGeo = new THREE.SphereGeometry(EARTH_R * 1.12, 64, 64);
+  const mesoMat = new THREE.MeshBasicMaterial({
     color: 0x2255cc,
     transparent: true,
     opacity: 0.06,
@@ -192,8 +203,19 @@ function createEarth() {
     blending: THREE.AdditiveBlending,
     depthWrite: false,
   });
-  const rim = new THREE.Mesh(rimGeo, rimMat);
-  scene.add(rim);
+  scene.add(new THREE.Mesh(mesoGeo, mesoMat));
+
+  // Exosphere — diffuse outer halo
+  const exoGeo = new THREE.SphereGeometry(EARTH_R * 1.22, 64, 64);
+  const exoMat = new THREE.MeshBasicMaterial({
+    color: 0x112244,
+    transparent: true,
+    opacity: 0.03,
+    side: THREE.BackSide,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  });
+  scene.add(new THREE.Mesh(exoGeo, exoMat));
 
   return earth;
 }
