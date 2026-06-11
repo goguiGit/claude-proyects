@@ -1,5 +1,5 @@
 const request = require("supertest");
-const { app } = require("../server");
+const { app, db } = require("../server");
 
 // Helper: log in and return a token
 async function login(email, password) {
@@ -69,3 +69,5 @@ describe("requireAdmin middleware", () => {
     expect(res.status).toBe(200);
   });
 });
+
+afterAll(() => db.close());

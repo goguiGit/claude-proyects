@@ -2,6 +2,13 @@
 const token = localStorage.getItem("nexushr_token");
 const user = JSON.parse(localStorage.getItem("nexushr_user") || "null");
 
+/* ── HTML escaping helper (XSS protection) ──────────────────────────────── */
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.appendChild(document.createTextNode(str ?? ""));
+  return div.innerHTML;
+}
+
 if (!token || !user) {
   window.location.href = "/index.html";
 }
@@ -105,12 +112,12 @@ async function loadOverview() {
     <div class="announcement-item">
       <div class="announcement-meta">
         ${a.pinned ? '<span class="pinned-dot"></span>' : ""}
-        <span>${a.author_name}</span>
+        <span>${escapeHtml(a.author_name)}</span>
         <span>·</span>
         <span>${new Date(a.created_at).toLocaleDateString("es-ES")}</span>
       </div>
-      <div class="announcement-title">${a.title}</div>
-      <div class="announcement-body">${a.body}</div>
+      <div class="announcement-title">${escapeHtml(a.title)}</div>
+      <div class="announcement-body">${escapeHtml(a.body)}</div>
     </div>`,
     )
     .join("");
@@ -131,9 +138,9 @@ async function loadOverview() {
       .map(
         (r) => `
       <tr>
-        <td>${r.employee_name || user.name}</td>
-        <td style="font-size:.82rem">${r.start_date} → ${r.end_date}</td>
-        <td><span class="badge badge-${r.status}">${r.status}</span></td>
+        <td>${escapeHtml(r.employee_name || user.name)}</td>
+        <td style="font-size:.82rem">${escapeHtml(r.start_date)} → ${escapeHtml(r.end_date)}</td>
+        <td><span class="badge badge-${escapeHtml(r.status)}">${escapeHtml(r.status)}</span></td>
       </tr>`,
       )
       .join("")}
@@ -180,12 +187,12 @@ async function loadAnnouncementsFull() {
     <div class="announcement-item">
       <div class="announcement-meta">
         ${a.pinned ? '<span class="pinned-dot"></span><span style="color:var(--primary);font-weight:600">Fijado</span><span>·</span>' : ""}
-        <span>${a.author_name}</span>
+        <span>${escapeHtml(a.author_name)}</span>
         <span>·</span>
         <span>${new Date(a.created_at).toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" })}</span>
       </div>
-      <div class="announcement-title">${a.title}</div>
-      <div class="announcement-body">${a.body}</div>
+      <div class="announcement-title">${escapeHtml(a.title)}</div>
+      <div class="announcement-body">${escapeHtml(a.body)}</div>
     </div>`,
     )
     .join("");
@@ -198,9 +205,9 @@ async function loadLeave() {
     .map(
       (r) => `
     <tr>
-      <td>${r.employee_name || user.name}</td>
-      <td style="font-size:.82rem">${r.start_date} → ${r.end_date}</td>
-      <td><span class="badge badge-${r.status}">${r.status}</span></td>
+      <td>${escapeHtml(r.employee_name || user.name)}</td>
+      <td style="font-size:.82rem">${escapeHtml(r.start_date)} → ${escapeHtml(r.end_date)}</td>
+      <td><span class="badge badge-${escapeHtml(r.status)}">${escapeHtml(r.status)}</span></td>
     </tr>`,
     )
     .join("");
@@ -223,7 +230,7 @@ document.getElementById("leaveForm").addEventListener("submit", async (e) => {
     e.target.reset();
     loadLeave();
   } else {
-    msgEl.innerHTML = `<div class="alert alert-error">${data.error}</div>`;
+    msgEl.innerHTML = `<div class="alert alert-error">${escapeHtml(data.error)}</div>`;
   }
 });
 
@@ -234,8 +241,8 @@ async function loadPayroll() {
     .map(
       (e) => `
     <tr>
-      <td>${e.name}</td>
-      <td>${e.department}</td>
+      <td>${escapeHtml(e.name)}</td>
+      <td>${escapeHtml(e.department)}</td>
       <td style="font-family:'JetBrains Mono',monospace;font-size:.875rem">€${Number(e.salary).toLocaleString("es-ES")}</td>
     </tr>`,
     )
@@ -285,14 +292,14 @@ async function loadAdmin() {
     .map(
       (u) => `
     <tr>
-      <td style="font-family:'JetBrains Mono',monospace;font-size:.8rem">${u.id}</td>
-      <td>${u.name}</td>
-      <td>${u.email}</td>
-      <td><span class="badge badge-${u.role}">${u.role}</span></td>
-      <td>${u.department}</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:.8rem">${escapeHtml(String(u.id))}</td>
+      <td>${escapeHtml(u.name)}</td>
+      <td>${escapeHtml(u.email)}</td>
+      <td><span class="badge badge-${escapeHtml(u.role)}">${escapeHtml(u.role)}</span></td>
+      <td>${escapeHtml(u.department)}</td>
       <td style="font-family:'JetBrains Mono',monospace;font-size:.85rem">€${Number(u.salary).toLocaleString("es-ES")}</td>
-      <td style="font-family:'JetBrains Mono',monospace;font-size:.78rem">${u.ssn}</td>
-      <td style="font-family:'JetBrains Mono',monospace;font-size:.75rem">${u.bank_account}</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:.78rem">${escapeHtml(u.ssn)}</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:.75rem">${escapeHtml(u.bank_account)}</td>
     </tr>`,
     )
     .join("");

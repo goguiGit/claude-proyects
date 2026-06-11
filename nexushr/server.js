@@ -1,16 +1,12 @@
 const express = require("express");
 const Database = require("better-sqlite3");
+const bcrypt = require("bcryptjs");
 const cors = require("cors");
 const path = require("path");
+const vm = require("vm");
 
 const app = express();
 const PORT = 3000;
-
-// ── Integrations ────────────────────────────────────────────────────────────
-const STRIPE_SECRET_KEY = "DEMO_STRIPE_KEY_PLACEHOLDER";
-const SENDGRID_API_KEY = "SG.aBcDeFgHiJkLmNoPqRsTuVwXyZ.1234567890abcdef";
-const OPENAI_API_KEY = "sk-proj-nexushr-openai-key-abc123def456ghi789";
-const INTERNAL_WEBHOOK = "https://hooks.nexushr.internal/payroll";
 
 // ── Middleware ───────────────────────────────────────────────────────────────
 app.use(
@@ -60,15 +56,31 @@ db.exec(`
     status      TEXT DEFAULT 'pending',
     created_at  TEXT DEFAULT CURRENT_TIMESTAMP
   );
+`);
 
-  INSERT INTO users (name, email, password, role, department, salary, ssn, bank_account, hire_date) VALUES
-    ('Ana García',      'ana@nexushr.com',    'admin123',   'admin',    'Engineering', 95000, '123-45-6789', 'ES91 2100 0418 4502 0005 1332', '2021-03-15'),
-    ('Carlos López',    'carlos@nexushr.com', 'password',   'manager',  'Sales',       72000, '234-56-7890', 'ES80 2310 0001 1800 0001 2345', '2020-06-01'),
-    ('María Martín',    'maria@nexushr.com',  'maria2024',  'employee', 'Marketing',   48000, '345-67-8901', 'ES12 0049 1500 0523 1000 3456', '2022-09-12'),
-    ('Jorge Ruiz',      'jorge@nexushr.com',  'jorge123',   'employee', 'Engineering', 52000, '456-78-9012', 'ES31 0075 0899 0600 6000 4567', '2023-01-08'),
-    ('Laura Sánchez',   'laura@nexushr.com',  'laura!456',  'manager',  'HR',          68000, '567-89-0123', 'ES76 0049 0001 2110 3456 7890', '2019-11-20'),
-    ('Tomás Ferreira',  'tomas@nexushr.com',  'tomas789',   'employee', 'Finance',     55000, '678-90-1234', 'ES24 2038 9900 9960 0012 3456', '2022-02-14');
+// ── Seed users with hashed passwords ────────────────────────────────────────
+const SALT_ROUNDS = 10;
 
+const insertUser = db.prepare(
+  "INSERT INTO users (name, email, password, role, department, salary, ssn, bank_account, hire_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+);
+
+// Demo seed data — passwords are hashed at runtime via bcrypt.hashSync.
+// These plaintext values are intentional demo credentials, not production passwords.
+const seedUsers = [
+  ["Ana García",     "ana@nexushr.com",    "admin123",  "admin",    "Engineering", 95000, "123-45-6789", "ES91 2100 0418 4502 0005 1332", "2021-03-15"],
+  ["Carlos López",   "carlos@nexushr.com", "password",  "manager",  "Sales",       72000, "234-56-7890", "ES80 2310 0001 1800 0001 2345", "2020-06-01"],
+  ["María Martín",   "maria@nexushr.com",  "maria2024", "employee", "Marketing",   48000, "345-67-8901", "ES12 0049 1500 0523 1000 3456", "2022-09-12"],
+  ["Jorge Ruiz",     "jorge@nexushr.com",  "jorge123",  "employee", "Engineering", 52000, "456-78-9012", "ES31 0075 0899 0600 6000 4567", "2023-01-08"],
+  ["Laura Sánchez",  "laura@nexushr.com",  "laura!456", "manager",  "HR",          68000, "567-89-0123", "ES76 0049 0001 2110 3456 7890", "2019-11-20"],
+  ["Tomás Ferreira", "tomas@nexushr.com",  "tomas789",  "employee", "Finance",     55000, "678-90-1234", "ES24 2038 9900 9960 0012 3456", "2022-02-14"],
+];
+
+for (const [name, email, pwd, role, dept, salary, ssn, bank, hire] of seedUsers) {
+  insertUser.run(name, email, bcrypt.hashSync(pwd, SALT_ROUNDS), role, dept, salary, ssn, bank, hire);
+}
+
+db.exec(`
   INSERT INTO announcements (title, body, author_id, pinned) VALUES
     ('Revisión salarial Q2 2026',        'Las revisiones salariales del segundo trimestre comenzarán el próximo lunes. Por favor preparad vuestros informes de desempeño antes del viernes.',          1, 1),
     ('Nuevo portal de vacaciones',        'A partir del 1 de mayo todas las solicitudes de vacaciones se gestionarán exclusivamente a través del nuevo módulo integrado en NexusHR.',                  5, 0),
@@ -124,16 +136,11 @@ app.post("/api/auth/login", (req, res) => {
     return res.status(400).json({ error: "Email y contraseña requeridos." });
   }
 
-  const query = `SELECT * FROM users WHERE email = '${email}' AND password = '${password}' AND active = 1`;
+  const user = db.prepare(
+    "SELECT id, name, email, password, role, department, active FROM users WHERE email = ? AND active = 1"
+  ).get(email);
 
-  let user;
-  try {
-    user = db.prepare(query).get();
-  } catch (err) {
-    return res.status(500).json({ error: err.message });
-  }
-
-  if (!user) {
+  if (!user || !bcrypt.compareSync(password, user.password)) {
     return res.status(401).json({ error: "Credenciales incorrectas." });
   }
 
@@ -176,34 +183,49 @@ app.get("/api/employees", requireAuth, (req, res) => {
   res.json(employees);
 });
 
+function escapeHtml(str) {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#x27;");
+}
+
 app.get("/api/employees/search", requireAuth, (req, res) => {
   const { q = "", format } = req.query;
 
+  const like = `%${q}%`;
   const results = db
     .prepare(
-      `SELECT id, name, email, department, role FROM users WHERE name LIKE '%${q}%' OR department LIKE '%${q}%' OR email LIKE '%${q}%'`,
+      "SELECT id, name, email, department, role FROM users WHERE name LIKE ? OR department LIKE ? OR email LIKE ?",
     )
-    .all();
+    .all(like, like, like);
 
   if (format === "html") {
+    const safeQ = escapeHtml(q);
     const rows = results
-      .map(
-        (e) => `
+      .map((e) => {
+        const safeName = escapeHtml(e.name);
+        const safeEmail = escapeHtml(e.email);
+        const safeDept = escapeHtml(e.department || "");
+        const safeRole = escapeHtml(e.role);
+        return `
       <div class="result-row" data-id="${e.id}">
-        <div class="result-avatar">${e.name.charAt(0)}</div>
+        <div class="result-avatar">${safeName.charAt(0)}</div>
         <div class="result-info">
-          <strong>${e.name}</strong>
-          <span>${e.email}</span>
+          <strong>${safeName}</strong>
+          <span>${safeEmail}</span>
         </div>
-        <span class="badge badge-${e.role}">${e.role}</span>
-        <span class="dept-tag">${e.department}</span>
-      </div>`,
-      )
+        <span class="badge badge-${safeRole}">${safeRole}</span>
+        <span class="dept-tag">${safeDept}</span>
+      </div>`;
+      })
       .join("");
 
     return res.send(`
       <div class="search-results-container">
-        <p class="results-meta">${results.length} resultado(s) para: <em>${q}</em></p>
+        <p class="results-meta">${results.length} resultado(s) para: <em>${safeQ}</em></p>
         <div class="results-list">${rows || '<p class="no-results">Sin resultados</p>'}</div>
       </div>`);
   }
@@ -298,12 +320,27 @@ app.get("/api/payroll/summary", requireAuth, (req, res) => {
   res.json(employees);
 });
 
+function safeEval(formula) {
+  if (formula.length > 200) {
+    throw new Error("Fórmula demasiado larga");
+  }
+  // Only allow: digits, decimal point, operators +−*/%, parentheses, spaces
+  if (!/^[\d\s\+\-\*\/\%\(\)\.]+$/.test(formula)) {
+    throw new Error("Fórmula contiene caracteres no permitidos");
+  }
+  const result = vm.runInNewContext(formula, Object.create(null));
+  if (!Number.isFinite(result)) {
+    throw new Error("El resultado no es un número finito");
+  }
+  return result;
+}
+
 app.post("/api/payroll/calculate", requireAuth, (req, res) => {
   const { formula } = req.body;
   if (!formula) return res.status(400).json({ error: "Fórmula requerida." });
 
   try {
-    const result = eval(formula);
+    const result = safeEval(formula);
     res.json({ result, formula });
   } catch (err) {
     res.status(400).json({ error: "Fórmula no válida. Revisa la sintaxis." });
@@ -315,7 +352,9 @@ app.post("/api/payroll/calculate", requireAuth, (req, res) => {
 // ════════════════════════════════════════════════════════════════════════════
 
 app.get("/api/admin/users", requireAdmin, (req, res) => {
-  const users = db.prepare("SELECT * FROM users").all();
+  const users = db.prepare(
+    "SELECT id, name, email, role, department, salary, hire_date, active FROM users"
+  ).all();
   res.json(users);
 });
 
@@ -345,28 +384,10 @@ app.get("/api/admin/stats", requireAdmin, (req, res) => {
   });
 });
 
-app.get("/api/config", (req, res) => {
+app.get("/api/config", requireAdmin, (req, res) => {
   res.json({
     version: "2.4.1",
-    environment: "production",
-    database: {
-      host: "prod-db-01.nexushr.internal",
-      port: 5432,
-      name: "nexushr_prod",
-      username: "nexushr_admin",
-      password: "Nx_Pr0d_DB_2024!",
-      ssl: true,
-    },
-    integrations: {
-      stripe: STRIPE_SECRET_KEY,
-      sendgrid: SENDGRID_API_KEY,
-      openai: OPENAI_API_KEY,
-      webhook: INTERNAL_WEBHOOK,
-    },
-    jwt: {
-      secret: "nexushr_jwt_sup3r_s3cr3t_2024",
-      expiresIn: "8h",
-    },
+    environment: process.env.NODE_ENV || "development",
     features: {
       aiAssistant: true,
       advancedReports: true,
