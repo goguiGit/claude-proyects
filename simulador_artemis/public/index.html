@@ -3,22 +3,48 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Artemis II Seguimiento de Misión — NASA</title>
+  <title>Artemis II — Seguimiento de Misión</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
+
+  <!-- Grain overlay — atmospheric CRT texture -->
+  <div id="grain-overlay" aria-hidden="true"></div>
 
   <!-- El canvas de Three.js ocupa el fondo -->
   <canvas id="space-canvas"></canvas>
 
   <!-- HUD: esquina superior izquierda -->
   <div id="hud">
-    <div class="hud-title">ARTEMIS II</div>
-    <div class="hud-row"><span class="hud-label">TEM</span><span id="hud-met" class="hud-value">T+ 000:00:00:00</span></div>
-    <div class="hud-row"><span class="hud-label">DIST TIERRA</span><span id="hud-dist-earth" class="hud-value">6.371 km</span></div>
-    <div class="hud-row"><span class="hud-label">DIST LUNA</span><span id="hud-dist-moon" class="hud-value">384.400 km</span></div>
-    <div class="hud-row"><span class="hud-label">VELOCIDAD</span><span id="hud-velocity" class="hud-value">0 km/h</span></div>
-    <div class="hud-row"><span class="hud-label">FASE</span><span id="hud-phase" class="hud-value">LANZAMIENTO</span></div>
+    <div class="hud-header">
+      <div class="hud-title">ARTEMIS II</div>
+      <div class="hud-status-dot" title="Sistema activo"></div>
+    </div>
+    <div class="hud-divider"></div>
+    <div class="hud-row">
+      <span class="hud-label">T.E.M.</span>
+      <span id="hud-met" class="hud-value hud-value--primary">T+ 000:00:00:00</span>
+    </div>
+    <div class="hud-row">
+      <span class="hud-label">DIST TIERRA</span>
+      <span id="hud-dist-earth" class="hud-value">6.371 km</span>
+    </div>
+    <div class="hud-row">
+      <span class="hud-label">DIST LUNA</span>
+      <span id="hud-dist-moon" class="hud-value">384.400 km</span>
+    </div>
+    <div class="hud-row">
+      <span class="hud-label">VELOCIDAD</span>
+      <span id="hud-velocity" class="hud-value">0 km/h</span>
+    </div>
+    <div class="hud-divider"></div>
+    <div class="hud-row">
+      <span class="hud-label">FASE</span>
+      <span id="hud-phase" class="hud-value hud-value--phase">LANZAMIENTO</span>
+    </div>
   </div>
 
   <!-- Panel de información / ayuda -->
@@ -68,13 +94,13 @@
         <div class="info-control"><kbd>Arrastrar</kbd><span>Rotar la escena</span></div>
         <div class="info-control"><kbd>Rueda</kbd><span>Zoom acercar / alejar</span></div>
         <div class="info-control"><kbd>Botón der.</kbd><span>Desplazar (pan)</span></div>
-        <div class="info-control"><kbd>🚀 Orion</kbd><span>Click sobre la nave → tripulación</span></div>
+        <div class="info-control"><kbd>⊕ ORION</kbd><span>Click sobre la nave → tripulación</span></div>
       </div>
 
       <div class="info-section">
         <div class="info-section-title">LÍNEA DE TIEMPO</div>
-        <div class="info-control"><kbd>▶️</kbd><span>Reproducir / pausar simulación</span></div>
-        <div class="info-control"><kbd>⏪ ⏩</kbd><span>Saltar ±12 horas</span></div>
+        <div class="info-control"><kbd>▶ / ⏸</kbd><span>Reproducir / pausar simulación</span></div>
+        <div class="info-control"><kbd>−12H / +12H</kbd><span>Saltar ±12 horas</span></div>
         <div class="info-control"><kbd>1×–1000×</kbd><span>Velocidad de reproducción</span></div>
         <div class="info-control"><kbd>● Marcador</kbd><span>Click en evento → saltar al momento</span></div>
       </div>
@@ -91,11 +117,26 @@
 
   <!-- Controles de cámara: esquina superior derecha -->
   <div id="camera-controls">
-    <button class="cam-btn" data-cam="earth" title="Vista Tierra">🌍</button>
-    <button class="cam-btn" data-cam="moon" title="Vista Luna">🌑</button>
-    <button class="cam-btn" data-cam="follow" title="Seguir Orion">🚀</button>
-    <button class="cam-btn" data-cam="overview" title="Visión General">🔭</button>
-    <button class="cam-btn" data-cam="earthrise" title="Amanecer Terrestre">🌅</button>
+    <button class="cam-btn" data-cam="earth" title="Vista Tierra">
+      <span class="cam-icon">◉</span>
+      <span class="cam-label">TIERRA</span>
+    </button>
+    <button class="cam-btn" data-cam="moon" title="Vista Luna">
+      <span class="cam-icon">◌</span>
+      <span class="cam-label">LUNA</span>
+    </button>
+    <button class="cam-btn" data-cam="follow" title="Seguir Orion">
+      <span class="cam-icon">⊕</span>
+      <span class="cam-label">ORION</span>
+    </button>
+    <button class="cam-btn" data-cam="overview" title="Visión General">
+      <span class="cam-icon">⊞</span>
+      <span class="cam-label">WIDE</span>
+    </button>
+    <button class="cam-btn" data-cam="earthrise" title="Amanecer Terrestre">
+      <span class="cam-icon">⊿</span>
+      <span class="cam-label">RISE</span>
+    </button>
   </div>
 
   <!-- Panel de eventos: lateral derecho, plegable -->
@@ -107,10 +148,8 @@
     <div id="events-list"></div>
   </div>
 
-  <!-- Pestaña para reabrir el panel de eventos (visible solo cuando está plegado) -->
-  <button id="events-reopen-tab" title="Mostrar eventos de misión">
-    EVENTOS<br>▶
-  </button>
+  <!-- Pestaña para reabrir el panel de eventos -->
+  <button id="events-reopen-tab" title="Mostrar eventos de misión">EVENTOS</button>
 
   <!-- Tooltip de tripulación -->
   <div id="crew-tooltip">
@@ -125,9 +164,9 @@
       <input type="range" id="timeline-slider" min="0" max="803400" value="0" step="100">
     </div>
     <div id="timeline-controls">
-      <button id="btn-rewind" title="Retroceder">⏪</button>
-      <button id="btn-playpause" title="Reproducir / Pausar">▶️</button>
-      <button id="btn-forward" title="Avanzar">⏩</button>
+      <button id="btn-rewind" title="Retroceder 12h" class="ctrl-btn">−12H</button>
+      <button id="btn-playpause" title="Reproducir / Pausar" class="ctrl-btn ctrl-btn--play">▶</button>
+      <button id="btn-forward" title="Avanzar 12h" class="ctrl-btn">+12H</button>
       <select id="speed-select" title="Velocidad de reproducción">
         <option value="1">1×</option>
         <option value="10">10×</option>

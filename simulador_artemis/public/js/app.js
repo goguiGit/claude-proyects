@@ -554,20 +554,25 @@ function updateHUD(point) {
 function buildEventsPanel() {
   eventsList.innerHTML = '';
   events.forEach(ev => {
+    const group = phaseGroup(ev.phase);
+    const color = PHASE_COLORS[group];
+    const label = PHASE_LABELS[group];
     const div = document.createElement('div');
     div.className = 'event-item';
     div.dataset.met = ev.met;
+    div.dataset.phaseGroup = group;
+    div.style.setProperty('--phase-color', color);
     div.innerHTML = `
       <div class="event-header">
         <span class="event-icon">${ev.icon}</span>
         <span class="event-title">${ev.title}</span>
+        <span class="event-phase-badge">${label}</span>
       </div>
       <div class="event-met">MET ${ev.metFormatted}</div>
       <div class="event-desc">${ev.description}</div>
     `;
     div.addEventListener('click', () => {
       currentMET = ev.met;
-      // Toggle expand
       div.classList.toggle('expanded');
     });
     eventsList.appendChild(div);
@@ -605,10 +610,13 @@ function buildTimelineMarkers() {
   container.innerHTML = '';
   events.forEach(ev => {
     const pct = (ev.met / TOTAL_MET) * 100;
+    const group = phaseGroup(ev.phase);
+    const color = PHASE_COLORS[group];
     const marker = document.createElement('div');
     marker.className = 'timeline-marker';
     marker.style.left = `${pct}%`;
-    marker.title = ev.title;
+    marker.style.setProperty('--phase-color', color);
+    marker.title = `${ev.title} · ${ev.phase}`;
     marker.innerHTML = `
       <div class="timeline-marker-dot"></div>
       <div class="timeline-marker-label">${ev.icon}</div>
@@ -669,24 +677,124 @@ document.addEventListener('click', onCanvasClick);
 // ——— Scene objects (set after init) ———
 let earthRef, moonRef, orionRef, trajectoryLines, starsRef;
 
+// ——— Phase group helper ———
+function phaseGroup(phase) {
+  if (!phase) return 'transit';
+  const p = phase.toUpperCase();
+  if (['LANZAMIENTO', 'ASCENSO', 'ÓRBITA DE ESTACIONAMIENTO'].includes(p)) return 'launch';
+  if (['VUELO DE IDA', 'VUELO DE CRUCERO', 'TRANS-LUNAR'].includes(p)) return 'transit';
+  if ([
+    'ESFERA DE INFLUENCIA LUNAR', 'OBSERVACIÓN LUNAR',
+    'SOBREVUELO LUNAR', 'ADQUISICIÓN DE SEÑAL', 'ECLIPSE SOLAR',
+  ].includes(p)) return 'lunar';
+  if ([
+    'VUELO DE REGRESO', 'APROXIMACIÓN FINAL',
+    'REENTRADA', 'AMERIZAJE',
+  ].includes(p)) return 'return';
+  return 'transit';
+}
+
+const PHASE_COLORS = {
+  launch:  'var(--phase-launch)',
+  transit: 'var(--phase-transit)',
+  lunar:   'var(--phase-lunar)',
+  return:  'var(--phase-return)',
+};
+
+const PHASE_LABELS = {
+  launch:  'ASCENSO',
+  transit: 'TRÁNSITO',
+  lunar:   'LUNAR',
+  return:  'RETORNO',
+};
+
 // ——— MAIN INIT ———
 async function init() {
-  // Show loading
   const loading = document.createElement('div');
   loading.id = 'loading-screen';
   loading.innerHTML = `
-    <div class="loading-title">ARTEMIS II</div>
-    <div class="loading-subtitle">SEGUIMIENTO DE MISIÓN — INICIANDO</div>
-    <div class="loading-bar-wrap"><div class="loading-bar" id="load-bar"></div></div>
+    <div class="loading-inner">
+      <div class="loading-eyebrow">NASA · ESA · CSA · 2026</div>
+      <h1 class="loading-title">ARTEMIS II</h1>
+      <p class="loading-vehicle">ORION MULTI-PURPOSE CREW VEHICLE</p>
+      <p class="loading-subtitle">SISTEMA DE SEGUIMIENTO DE MISIÓN</p>
+      <div class="loading-divider"></div>
+      <div class="loading-steps">
+        <div class="loading-step step-active" id="step-conn">
+          <span class="step-indicator"></span>
+          <span class="step-label">CONECTANDO CON SERVIDORES</span>
+          <span class="step-dots"></span>
+          <span class="step-status">···</span>
+        </div>
+        <div class="loading-step" id="step-traj">
+          <span class="step-indicator"></span>
+          <span class="step-label">DATOS DE TRAYECTORIA</span>
+          <span class="step-dots"></span>
+          <span class="step-status">···</span>
+        </div>
+        <div class="loading-step" id="step-events">
+          <span class="step-indicator"></span>
+          <span class="step-label">EVENTOS DE MISIÓN</span>
+          <span class="step-dots"></span>
+          <span class="step-status">···</span>
+        </div>
+        <div class="loading-step" id="step-crew">
+          <span class="step-indicator"></span>
+          <span class="step-label">DATOS DE TRIPULACIÓN</span>
+          <span class="step-dots"></span>
+          <span class="step-status">···</span>
+        </div>
+        <div class="loading-step" id="step-scene">
+          <span class="step-indicator"></span>
+          <span class="step-label">ESCENA 3D</span>
+          <span class="step-dots"></span>
+          <span class="step-status">···</span>
+        </div>
+        <div class="loading-step" id="step-ui">
+          <span class="step-indicator"></span>
+          <span class="step-label">INTERFAZ DE CONTROL</span>
+          <span class="step-dots"></span>
+          <span class="step-status">···</span>
+        </div>
+      </div>
+      <div class="loading-progress-row">
+        <div class="loading-bar-wrap"><div class="loading-bar" id="load-bar"></div></div>
+        <span class="loading-pct" id="load-pct">0%</span>
+      </div>
+      <div class="loading-pct-row">
+        <span class="loading-date">MISIÓN INICIADA · 01 ABR 2026 · 06:50 UTC</span>
+      </div>
+    </div>
   `;
   document.body.appendChild(loading);
 
   const loadBar = document.getElementById('load-bar');
-  const setProgress = p => { loadBar.style.width = `${p}%`; };
+  const loadPct = document.getElementById('load-pct');
+
+  const setProgress = (p) => {
+    loadBar.style.width = `${p}%`;
+    loadPct.textContent = `${Math.round(p)}%`;
+  };
+
+  const activateStep = (id) => {
+    const el = document.getElementById(id);
+    if (el) el.classList.add('step-active');
+  };
+
+  const completeStep = (id) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.classList.remove('step-active');
+    el.classList.add('step-done');
+    el.querySelector('.step-status').textContent = 'OK';
+  };
 
   try {
-    // Fetch data
-    setProgress(20);
+    setProgress(5);
+    completeStep('step-conn');
+    activateStep('step-traj');
+    setProgress(12);
+
     const [trajRes, eventsRes, crewRes] = await Promise.all([
       fetch('/api/trajectory'),
       fetch('/api/events'),
@@ -694,38 +802,54 @@ async function init() {
     ]);
 
     trajectory = await trajRes.json();
+    completeStep('step-traj');
+    activateStep('step-events');
+    setProgress(35);
+
     events = await eventsRes.json();
+    completeStep('step-events');
+    activateStep('step-crew');
+    setProgress(50);
+
     crew = await crewRes.json();
+    completeStep('step-crew');
+    activateStep('step-scene');
+    setProgress(62);
 
-    setProgress(60);
-
-    // Build scene
     starsRef = createStarfield();
     earthRef = createEarth();
     moonRef = createMoon();
     createSun();
     orionRef = createOrion();
     trajectoryLines = createTrajectoryLine(trajectory);
+    completeStep('step-scene');
+    activateStep('step-ui');
+    setProgress(84);
 
-    setProgress(85);
-
-    // Build UI
     buildEventsPanel();
     buildTimelineMarkers();
     buildCrewTooltip();
     setupControls();
-
-    // Initial camera
     setCameraPreset('overview');
-
+    completeStep('step-ui');
     setProgress(100);
-    setTimeout(() => loading.remove(), 400);
 
-    // Start render loop
+    setTimeout(() => {
+      loading.classList.add('loading-fade-out');
+      setTimeout(() => loading.remove(), 500);
+    }, 700);
+
     requestAnimationFrame(animate);
 
   } catch (err) {
-    loading.innerHTML = `<div class="loading-title" style="color:#ff4444">ERROR DE CONEXIÓN</div><div class="loading-subtitle">${err.message}</div>`;
+    const inner = loading.querySelector('.loading-inner');
+    if (inner) {
+      inner.innerHTML = `
+        <div class="loading-error">ERROR DE CONEXIÓN</div>
+        <div class="loading-error-msg">${err.message}</div>
+        <div class="loading-error-hint">Verifica que el servidor esté activo en puerto 3000</div>
+      `;
+    }
   }
 }
 
@@ -739,7 +863,8 @@ function setupControls() {
   // Play/Pause
   btnPlayPause.addEventListener('click', () => {
     isPlaying = !isPlaying;
-    btnPlayPause.textContent = isPlaying ? '⏸️' : '▶️';
+    btnPlayPause.textContent = isPlaying ? '⏸' : '▶';
+    btnPlayPause.classList.toggle('playing', isPlaying);
     lastTimestamp = null;
   });
 
