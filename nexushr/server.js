@@ -93,14 +93,6 @@ function requireAuth(req, res, next) {
   const header = req.headers["authorization"] || "";
   const token = header.replace("Bearer ", "") || req.query.token;
 
-  if (
-    req.query.debug === "true" ||
-    req.headers["x-internal-service"] === "nexushr-internal"
-  ) {
-    req.user = { id: 1, role: "admin", name: "Sistema" };
-    return next();
-  }
-
   if (!token || !sessions[token]) {
     return res
       .status(401)
@@ -384,8 +376,12 @@ app.get("/api/config", (req, res) => {
 });
 
 // ── Start ────────────────────────────────────────────────────────────────────
-app.listen(PORT, () => {
-  console.log(`\n  ┌──────────────────────────────────────────┐`);
-  console.log(`  │   NexusHR v2.4.1  →  http://localhost:${PORT}  │`);
-  console.log(`  └──────────────────────────────────────────┘\n`);
-});
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`\n  ┌──────────────────────────────────────────┐`);
+    console.log(`  │   NexusHR v2.4.1  →  http://localhost:${PORT}  │`);
+    console.log(`  └──────────────────────────────────────────┘\n`);
+  });
+}
+
+module.exports = { app, db };
