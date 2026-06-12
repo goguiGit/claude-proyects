@@ -562,15 +562,36 @@ function buildEventsPanel() {
     div.dataset.met = ev.met;
     div.dataset.phaseGroup = group;
     div.style.setProperty('--phase-color', color);
-    div.innerHTML = `
-      <div class="event-header">
-        <span class="event-icon">${ev.icon}</span>
-        <span class="event-title">${ev.title}</span>
-        <span class="event-phase-badge">${label}</span>
-      </div>
-      <div class="event-met">MET ${ev.metFormatted}</div>
-      <div class="event-desc">${ev.description}</div>
-    `;
+    const header = document.createElement('div');
+    header.className = 'event-header';
+
+    const icon = document.createElement('span');
+    icon.className = 'event-icon';
+    icon.textContent = ev.icon;
+
+    const title = document.createElement('span');
+    title.className = 'event-title';
+    title.textContent = ev.title;
+
+    const badge = document.createElement('span');
+    badge.className = 'event-phase-badge';
+    badge.textContent = label;
+
+    header.appendChild(icon);
+    header.appendChild(title);
+    header.appendChild(badge);
+
+    const metEl = document.createElement('div');
+    metEl.className = 'event-met';
+    metEl.textContent = `MET ${ev.metFormatted}`;
+
+    const desc = document.createElement('div');
+    desc.className = 'event-desc';
+    desc.textContent = ev.description;
+
+    div.appendChild(header);
+    div.appendChild(metEl);
+    div.appendChild(desc);
     div.addEventListener('click', () => {
       currentMET = ev.met;
       div.classList.toggle('expanded');
@@ -617,10 +638,15 @@ function buildTimelineMarkers() {
     marker.style.left = `${pct}%`;
     marker.style.setProperty('--phase-color', color);
     marker.title = `${ev.title} · ${ev.phase}`;
-    marker.innerHTML = `
-      <div class="timeline-marker-dot"></div>
-      <div class="timeline-marker-label">${ev.icon}</div>
-    `;
+    const dot = document.createElement('div');
+    dot.className = 'timeline-marker-dot';
+
+    const markerLabel = document.createElement('div');
+    markerLabel.className = 'timeline-marker-label';
+    markerLabel.textContent = ev.icon;
+
+    marker.appendChild(dot);
+    marker.appendChild(markerLabel);
     marker.addEventListener('click', () => { currentMET = ev.met; });
     container.appendChild(marker);
   });
@@ -640,15 +666,36 @@ function buildCrewTooltip() {
     const idx = crew.indexOf(member);
     const div = document.createElement('div');
     div.className = 'crew-member';
-    div.innerHTML = `
-      <div class="crew-avatar">${avatars[idx] || '🧑‍🚀'}</div>
-      <div class="crew-info">
-        <div class="crew-name">${member.name}</div>
-        <div class="crew-role">${member.role}</div>
-        <div class="crew-agency">${member.agency}</div>
-        <div class="crew-bio">${member.bio}</div>
-      </div>
-    `;
+    const avatar = document.createElement('div');
+    avatar.className = 'crew-avatar';
+    avatar.textContent = avatars[idx] || '🧑‍🚀';
+
+    const info = document.createElement('div');
+    info.className = 'crew-info';
+
+    const nameEl = document.createElement('div');
+    nameEl.className = 'crew-name';
+    nameEl.textContent = member.name;
+
+    const roleEl = document.createElement('div');
+    roleEl.className = 'crew-role';
+    roleEl.textContent = member.role;
+
+    const agencyEl = document.createElement('div');
+    agencyEl.className = 'crew-agency';
+    agencyEl.textContent = member.agency;
+
+    const bioEl = document.createElement('div');
+    bioEl.className = 'crew-bio';
+    bioEl.textContent = member.bio;
+
+    info.appendChild(nameEl);
+    info.appendChild(roleEl);
+    info.appendChild(agencyEl);
+    info.appendChild(bioEl);
+
+    div.appendChild(avatar);
+    div.appendChild(info);
     crewListEl.appendChild(div);
   });
 }
@@ -844,11 +891,23 @@ async function init() {
   } catch (err) {
     const inner = loading.querySelector('.loading-inner');
     if (inner) {
-      inner.innerHTML = `
-        <div class="loading-error">ERROR DE CONEXIÓN</div>
-        <div class="loading-error-msg">${err.message}</div>
-        <div class="loading-error-hint">Verifica que el servidor esté activo en puerto 3000</div>
-      `;
+      inner.textContent = '';
+
+      const errTitle = document.createElement('div');
+      errTitle.className = 'loading-error';
+      errTitle.textContent = 'ERROR DE CONEXIÓN';
+
+      const errMsg = document.createElement('div');
+      errMsg.className = 'loading-error-msg';
+      errMsg.textContent = err.message;
+
+      const errHint = document.createElement('div');
+      errHint.className = 'loading-error-hint';
+      errHint.textContent = 'Verifica que el servidor esté activo en puerto 3000';
+
+      inner.appendChild(errTitle);
+      inner.appendChild(errMsg);
+      inner.appendChild(errHint);
     }
   }
 }
