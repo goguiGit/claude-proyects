@@ -1,6 +1,5 @@
 import { Router } from 'express';
 import { MISSION_EVENTS } from '../data/events.js';
-import { formatMET } from '../lib/orbital-math.js';
 
 const router = Router();
 
@@ -9,10 +8,10 @@ router.get('/', (_req, res) => {
 });
 
 router.get('/upcoming', (req, res) => {
-  const met = parseFloat(req.query.met as string) || 0;
-  const upcoming = MISSION_EVENTS
-    .filter(e => e.met >= met)
-    .slice(0, 3);
+  const raw = req.query.met;
+  const parsed = typeof raw === 'string' ? parseFloat(raw) : NaN;
+  const met = isFinite(parsed) && parsed >= 0 ? parsed : 0;
+  const upcoming = MISSION_EVENTS.filter(e => e.met >= met).slice(0, 3);
   res.json(upcoming);
 });
 
