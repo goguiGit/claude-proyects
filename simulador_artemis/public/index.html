@@ -178,6 +178,7 @@
   </div>
 
   <!-- Three.js + OrbitControls via CDN -->
+  <!-- TODO(security): importmap no soporta SRI. Migrar a bundle local con vite/esbuild para eliminar H9. -->
   <script type="importmap">
   {
     "imports": {
@@ -188,7 +189,9 @@
   </script>
 
   <!-- Chart.js via CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"
+          integrity="sha384-9nhczxUqK87bcKHh20fSQcTGD4qq5GhayNYSYWqwBkINBhOfQLg/P5HG5lF1urn4"
+          crossorigin="anonymous"></script>
 
   <!-- Módulos de la aplicación -->
   <script type="module" src="/js/app.js"></script>
