@@ -1,3 +1,7 @@
+# Artemis II Mission Tracker
+
+> **Security scope:** All file operations are restricted to the project root directory. Do not read or write files outside this directory without explicit user approval.
+
 ## Security Review Workflow
 
 When the user asks for a security review, security audit, vulnerability scan, or uses

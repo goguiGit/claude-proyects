@@ -6,6 +6,7 @@ description: >
   moment of the mission.
 disable-model-invocation: true
 argument-hint: "<MET-time> <view-preset>"
+allowed-tools: Read, Write, Edit
 ---
 
 # Capture Mission View
